@@ -1,0 +1,3 @@
+[submodule "apclient"]
+	path = apclient
+	url = git@github.com:apclient
