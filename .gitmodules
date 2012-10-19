@@ -1,3 +1,6 @@
 [submodule "apclient"]
 	path = apclient
 	url = git://github.com/jsarba/applypolicy/apclient.git
+[submodule "apserver"]
+	path = apserver
+	url = git://github.com/jsarba/applypolicy/apserver.git
