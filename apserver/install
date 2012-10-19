@@ -1,0 +1,93 @@
+#!/bin/ksh
+#
+# Apply Policy Server Installation script v0.0.1
+# (R) 2012 Shellcode SRL
+#
+# APSERVER installation
+
+VER="1.0"
+
+echo
+cat COPYRIGHT
+echo 
+echo 
+echo "If you continue you accept the terms of the LICENSE file."
+echo "Press ENTER to continue or CTRL+C to end."
+read linea
+linea=""
+while [ -z "${linea}" ]
+do
+  echo "Where do you want to install Apply Policy Server? (ie:/opt/shellcode/apserver): "
+  read linea
+  linea="${linea:-/opt/shellcode/apserver}"
+  prefix="${linea}"
+  mkdir -p ${prefix} 1>&2 2> /dev/null
+  if [ ! -d "${prefix}" ] ; then
+     echo "Path does not exist and couldn't be created: ${linea}"
+     linea=""
+  fi
+done
+
+linea=""
+
+while [ -z "${linea}" ]
+do
+  echo "What is the service user login name for Apply Policy: "
+  read linea
+  if [ -z "${linea}" ] ; then
+     continue
+  fi
+  APHOME=`cat /etc/passwd | sed -n  "/^${linea}/p" | awk -F: '{print $6}'`
+  if [ ! -d "${APHOME}" ] ; then
+     APHOME=""
+     linea=""
+     echo "The user doesn\'t exist. You must create it first."
+  fi
+done
+
+if [ ! -d "${APHOME}/.ssh" ]; then
+ echo "${APHOME}/.ssh does not exist, creating..."
+ mkdir "${APHOME}/.ssh"
+fi
+
+tmpusr="${linea}"
+chown ${tmpusr} "${APHOME}/.ssh"
+chmod 700 "${APHOME}/.ssh"
+
+rm apserver.tar 2>/dev/null
+tar cf apserver.tar bin etc var doc 
+mv apserver.tar ${prefix}
+cd ${prefix}
+tar xf apserver.tar
+
+if [ "$?" != "0" ] ; then
+   echo "There was a problem uncompressing Apply Policy Server."
+   echo "Terminating..."
+   exit 1
+fi
+
+
+cat bin/apserver | sed -e "s@^PREFIX.*@PREFIX=\"${prefix}\"@1" > bin/apserver.cfg
+rm apserver.tar
+rm bin/apserver
+mv bin/apserver.cfg bin/apserver
+chmod +x bin/apserver
+chown -R ${tmpusr}:0 ${prefix} 
+cd -  >/dev/null
+
+
+echo
+echo "Do you want to create a ssh key pair with an empty password now? (y/N)?"
+read linea
+if [ "${linea}" = "y" ] ; then
+   ssh-keygen -P "" -t dsa -C "Apply Policy key" -f "${prefix}/etc/apserver/private_dsa"
+   mv "${prefix}/etc/apserver/private_dsa.pub" "${prefix}/etc/apserver/public_dsa"
+   chown ${tmpusr} "${prefix}/etc/apserver/private_dsa"
+   chown ${tmpusr} "${prefix}/etc/apserver/public_dsa"
+   echo "The public key to distribute to the Apply Policy clients is: ${prefix}/etc/apserver/public_dsa"
+else
+   echo "Remember to configure the ssh keys. APServer will not work without them."
+fi
+
+echo "All done."
+echo "(R) 2012 Shellcode S.R.L."
