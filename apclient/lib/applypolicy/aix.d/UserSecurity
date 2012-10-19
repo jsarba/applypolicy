@@ -1,0 +1,422 @@
+#!/bin/ksh
+UserSecurity_admin_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+ handle_user admin "${1}"
+}
+
+
+UserSecurity_login_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+ handle_user admin "${1}"
+}
+
+
+UserSecurity_su_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+ handle_user su "${1}"
+}
+
+
+UserSecurity_daemon_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+ handle_user daemon "${1}"
+}
+
+
+UserSecurity_rlogin_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+ handle_user rlogin "${1}"
+}
+
+
+UserSecurity_sugroups_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user sugroups "${1}"
+}
+
+
+UserSecurity_admgroups_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user  admgroups "${1}"
+}
+
+
+UserSecurity_ttys_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user ttys "${1}"
+}
+
+
+UserSecurity_auth1_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user auth1 "${1}"
+}
+
+
+UserSecurity_auth2_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user auth2 "${1}"
+}
+
+
+UserSecurity_tpath_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user tpath "${1}"
+}
+
+
+UserSecurity_umask_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user umask ${1}
+}
+
+UserSecurity_SYSTEM_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+     return
+  fi
+  handle_user SYSTEM "${1}"
+}
+
+
+
+UserSecurity_locked_AIX()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+     return
+  fi
+
+ for ii in "${1}"
+    do
+       handle_sec account_locked true "/etc/security/user" ${ii}
+    done
+}
+
+
+UserSecurity_allow_nocheck_AIX()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+     return
+  fi
+
+  CHECK=$(cat /etc/security/passwd | ${SED} -e 's/^#//' | ${GREP} -i 'NOCHECK')
+
+  if [ -n ${CHECK} ] ; then
+     APLog "There are users with NOCHECK option enabled. FAILED"
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  
+}
+
+
+UserSecurity_nocheck_AIX()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+
+ FOUND=0
+ 
+ #check the listed users to have NOCHECK on
+ for USUARIO in ${1}
+    do
+     if [ -z "${USUARIO}" ] ; then
+        continue;
+     fi
+     FLAGS=$(pwdadm -q ${USUARIO} | grep flags | sed -e 's/.*flags = //g')
+     NOCHECK=$(echo "${FLAGS}" | ${GREP} NOCHECK)
+     if [ -z "${NOCHECK}" ] ; then
+        APLog "The user ${USUARIO:-NONEXISTENT} does not has the NOCHECK 
+flag set."
+        FOUND=1
+        if [ ${FIXATE} = 1 ] ; then
+           if [ -z "${FLAGS}" ] ; then
+              NEWFLAGS="NOCHECK"
+           else
+              NEWFLAGS="${FLAGS},NOCHECK"
+           fi
+           APBackup /etc/passwd
+           APBackup /etc/security/passwd
+           pwdadm -f "${NEWFLAGS}" ${USUARIO}
+           APLog "FIXED"
+        fi
+     fi
+    done
+
+ #check for the rest of the users to not to have the nocheck flag
+ USUARIOS=$(AllUsers)
+ USUARIOS=$(FilterUsers "${USUARIOS}" "${1}")
+
+ for USUARIO in ${USUARIOS}
+    do
+     if [ -z "${USUARIO}" ] ; then
+        continue;
+     fi
+     FLAGS=$(pwdadm -q ${USUARIO} | grep flags | sed -e 's/.*flags = //g')
+     NOCHECK=$(echo "${FLAGS}" | ${GREP} NOCHECK)
+     if [ -n "${NOCHECK}" ] ; then
+        APLog "The user ${USUARIO:-NONEXISTENT} has the NOCHECK flag set."
+        FOUND=1
+        if [ ${FIXATE} = 1 ] ; then
+           NEWFLAGS=$(echo "${FLAGS}" | ${SED} -e 's/,NOCHECK//g' -e 's/NOCHECK,//g' -e 's/NOCHECK//h')
+           if [ -z "${NEWFLAGS}" ] ; then
+              pwdadm -c "${USUARIO}"
+           else
+              pwdadm -f ${NEWFLAGS} ${USUARIO}
+           fi
+           APLog "FIXED"
+        fi
+     fi
+    done
+ 
+    
+ if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+    APLog "OK"
+ fi
+
+}
+
+
+UserSecurity_account_locked_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user account_locked "${1}"
+}
+
+
+UserSecurity_expires_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user expires "${1}"
+}
+
+
+UserSecurity_logintimes_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user logintimes "${1}"
+}
+
+
+UserSecurity_pwdwarntime_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user pwdwarntime "${1}"
+}
+
+
+UserSecurity_loginretries_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user loginretries "${1}"
+}
+
+
+UserSecurity_histexpire_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user histexpire "${1}"
+}
+
+
+UserSecurity_histsize_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user histsize "${1}"
+}
+
+
+UserSecurity_minage_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user minage "${1}"
+}
+
+
+UserSecurity_maxage_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user maxage "${1}"
+}
+
+
+UserSecurity_maxexpired_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user maxexpired "${1}"
+}
+
+
+UserSecurity_minalpha_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user minalpha "${1}"
+}
+
+
+UserSecurity_minother_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user minother "${1}"
+}
+
+
+UserSecurity_minlen_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user minlen "${1}"
+}
+
+
+UserSecurity_mindiff_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user mindiff "${1}"
+}
+
+
+UserSecurity_maxrepeats_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user maxrepeats "${1}"
+}
+
+
+UserSecurity_dictionlist_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user dictionlist "${1}"
+}
+
+
+UserSecurity_pwdchecks_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user pwdchecks "${1}"
+}
+
+
+UserSecurity_only_one_root_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+
+  CHECK=$(cat /etc/passwd | ${AWK} -F: '{print $3}' | ${SED} -n '/\<0\>/p')
+
+  if [ ${CHECK} != "0" ] ; then
+     APLog "There is more than one user with UID=0. FAILED"
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  
+}
+
+
+

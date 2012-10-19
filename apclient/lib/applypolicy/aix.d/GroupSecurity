@@ -1,0 +1,144 @@
+#!/bin/ksh
+
+
+handle_groups()
+{
+  FOUND=0
+#set -x
+ #Cambio los ; por enters para separar por lineas cada grupo de grupos y su
+ #valor caracteristico
+ ULIST=$(echo ${1} | ${SED} -e 's/ *//g' -e 's/;/ /g')
+
+ for CONF in ${ULIST}
+    do
+      if [ -z "${CONF}" ] ; then
+         continue;
+      fi
+#if there are no listed groups, is the default value, applied for all users
+#except the previusly listed
+      echo ${CONF} | ${GREP} : > /dev/null
+      if [ $? -ne 0 ] ; then
+      #default value
+         GROUPS=$(AllGroups)
+         GROUPS=$(FilterUsers "${GROUPS}" "${ALL_LISTED}" )
+         VALUE=${CONF}
+      else
+         GROUPS=$(echo ${CONF} | ${SED} -e 's/\(.*\):.*/\1/g')
+         GROUPS=$(echo ${GROUPS} | ${SED} -e 's/,/ /g')
+         ALL_LISTED="${ALL_LISTED} ${GROUPS}"
+         VALUE=$(echo ${CONF} | ${SED} -e 's/.*:\(.*\)/\1/g')
+      fi
+      for GROUP in ${GROUPS}
+         do
+           CHECK=$(lsgroup -a ${2} ${GROUP} | ${SED} -e 's/.*=//g')
+           CHECK=${CHECK%% };CHECK=${CHECK## }
+           if [ "${CHECK}" != "${VALUE}" ] ; then
+              FOUND=1
+              APLog "The group ${GROUP:-NONEXISTENT} has ${2}=${CHECK} and should be 
+${VALUE}."
+              if [ ${FIXATE} = 1 ] ; then
+                  APBackup /etc/security/group
+                  APBackup /etc/group
+                  RESULT=$(chgroup ${2}=${VALUE} ${GROUP})
+                  if [ $? -ne 0 ] ; then
+                     APLog "FAILED: ${RESULT}"
+                  else
+                     APLog "FIXED"
+                  fi
+              fi
+           fi
+         done
+    done
+
+ if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+    APLog "OK"
+ fi
+
+}
+
+#admin = bin sys adm uucp mail security cron audit shutdown : true ; false
+GroupSecurity_admin_AIX()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+
+ handle_groups "${1}" admin
+
+}
+
+
+#adms  = bin sys adm uucp mail security cron audit shutdown : ; root
+GroupSecurity_adms_AIX()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+
+ handle_groups "${1}" adms
+
+}
+
+
+GroupSecurity_checkdups_AIX()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+
+ if [ "${1}" = "true" ] ; then
+    FOUND=0
+    GRUPOS=$(lsgroup ALL | ${SED} -e 's/^#.*//g' | ${AWK} '{print $1}')
+    for GRUPO in ${GRUPOS}
+       do
+        if [ -z "${GRUPO}" ] ; then
+           continue;
+        fi
+        USUARIOS=$(lsgroup  ${GRUPO} | ${SED} -e 's/.*users=\(.*\)/\1/' -e 's/ .*//' -e 's/\,/\
+/g' | sort )
+        UUNIQ=$(echo "${USUARIOS}" | uniq -d)
+        if [ -n "${UUNIQ}" ] ; then
+           APLog "The group ${GRUPO:-NONEXISTENT} has the user/s ${UUNIQ} included more than once. "
+           FOUND=1
+        fi
+       done
+       
+    if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+       APLog "OK"
+    fi
+ fi
+}
+
+
+GroupSecurity_emptyroles_AIX()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+ if [ "${1}" = "true" ] ; then
+    FOUND=0
+    ROLES=$(lsrole ALL | ${AWK} '{print $1}')
+    for ROL in ${ROLES}
+       do
+        if [ -z "${ROL}" ] ; then
+           continue;
+        fi
+        GRUPOS=$(lsrole ${ROL} | ${SED} -e 's/.*groups=//g' -e 's/ .*//g')
+        GRUPOS=${GRUPOS%% };#${GRUPOS## }
+        if [ -n "${GRUPOS}" ] ; then
+           APLog "The role ${ROLE:-NONEXISTENT} has the following group/s ${GRUPOS}"
+           FOUND=1
+           if [ ${FIXATE} = 1 ] ; then
+				  APBackup /etc/security/roles
+              chrole groups=  ${ROLE}
+              APLog "FIXED"
+           fi
+        fi
+       done
+    if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+       APLog "OK"
+    fi
+ fi
+
+}
+

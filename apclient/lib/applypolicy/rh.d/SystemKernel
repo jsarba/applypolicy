@@ -1,0 +1,112 @@
+#!/usr/bin/ksh
+##Section = SystemKernel
+##$1 is the sysctl parameter
+##$2 is the value asigned to the sysctl parameter in $1
+sysctl_handle()
+{
+  #dots are meanungfull to sed so we need to preprocess the parameter 
+  #to escape those  
+  SEDPREPRO="$(echo ${1} | sed 's/\./\\./g')"
+  ACTUALVAL="$(${SED} -n "/^ *#/d; /^$/d; s/${SEDPREPRO} *= \(.*\)/\1/p" ${SYSCTLFILE})"
+  if [ "${2}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+   if [ ${FIXATE} = 1 ] ; then
+    APBackup ${SYSCTLFILE}
+    if [ -z "${ACTUALVAL}" ]; then
+        echo ${1} = ${2} >> ${SYSCTLFILE}
+      else    
+        ${SED} "s/${SEDPREPRO} *=.*/${SEDPREPRO} = $2/" ${SYSCTLFILE} > sysctl.conf.tmp
+        mv sysctl.conf.tmp ${SYSCTLFILE}
+      fi
+      return
+    fi  
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+SystemKernel_net_ipv4_ip_forward_RH ()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  sysctl_handle net.ipv4.ip_forward "$1"
+}
+
+SystemKernel_net_ipv4_icmp_echo_ignore_broadcasts_RH ()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  sysctl_handle net.ipv4.ip_forward "$1"
+}
+
+SystemKernel_net_ipv4_icmp_ignore_bogus_error_responses_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi 
+  sysctl_handle net.ipv4.icmp_ignore_bogus_error_responses "$1"
+}
+
+SystemKernel_net_ipv4_tcp_syncookies_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  sysctl_handle net.ipv4.tcp_syncookies "$1"
+}
+
+SystemKernel_net_ipv4_conf_default_log_martians_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle net.ipv4.conf.default.log_martians "$1"
+}
+
+SystemKernel_net_ipv4_conf_all_log_martians_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle net.ipv4.conf.all.log_martians "$1"
+}
+
+
+SystemKernel_dev_audit_max_messages_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle dev.audit.max-messages "$1"
+}
+
+SystemKernel_dev_audit_paranoia_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle dev.audit.paranoia "$1"
+}
+
+SystemKernel_dev_audit_attach_all_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle dev.audit.attach-all "$1"
+}
+
+SystemKernel_dev_audit_allow_suspend_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle dev.audit.allow-suspend "$1"
+}
+
+
+

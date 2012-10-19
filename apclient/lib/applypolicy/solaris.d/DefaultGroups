@@ -1,0 +1,36 @@
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+#$1 is in the form of groupname:GID:users
+DefaultGroups_CheckGroup_SOL ()
+{
+ #root:0:root -> root:x:0:root
+ GROUPOK=$(echo ${1} | ${SED} 's/:/:x:/')
+ GNAME=$(echo ${1} | ${AWK} -F: '{print $1}')
+ GROUPC=${1#*:}
+
+ CHECK=$(${SED} -n "/^${GNAME}:/p" /etc/group)
+
+#On solaris its accepted to have group::gid:users instead of group:x:gid:users
+#both checks are made
+ if [ "${GROUPOK}" != "${CHECK}" -a "${1}" != "${CHECK}" ] ; then
+    APLog "${GNAME} has ${CHECK:-NONEXISTENT} and should be ${GROUPC}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup /etc/group
+      #change or add the option      
+      if [ -z "${CHECK}" ]; then
+        echo ${GROUPOK} >> /etc/group
+      else    
+        ${SED} "s/^${GNAME}:.*/${GROUPOK}/" /etc/group > /tmp/apdg.tmp
+        mv -f /tmp/apdg.tmp /etc/group
+        #fix perms      
+        ${CHMOD} 644 /etc/group
+        APLog "FIXED"
+     fi 
+     return 
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+ 
+}

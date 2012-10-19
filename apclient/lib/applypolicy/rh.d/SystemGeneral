@@ -1,0 +1,104 @@
+#!/usr/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+##Section = SystemGeneral
+##$1 is the contents of the securetty variable
+SystemGeneral_SecureTTYs_RH()
+{  
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi  
+  ACTUALVAL="$(cat ${SECURETTYFILE})"
+  ACTUALVAL="$(echo $ACTUALVAL | ${SED} 's/ /,/g')"
+  if [ "${1}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${1}"
+   if [ ${FIXATE} = 1 ] ; then
+      APBackup ${SECURETTYFILE}
+      echo ${1} | ${SED} 's/,/\
+/g' > ${SECURETTYFILE}
+      return
+    fi  
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+##$1 the contents of the allowedshells variable
+##this function is escencially like the last one but uses a different file
+##rewrite to use wrappers and a regular function with 2 parameters the 1st
+##one being the name of the file if there is time
+SystemGeneral_AllowedShells_RH()
+{  
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi  
+  ACTUALVAL="$(cat ${SHELLSFILE})"
+  ACTUALVAL="$(echo $ACTUALVAL | ${SED} 's/ /,/g')"
+  if [ "${1}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${1}"
+   if [ ${FIXATE} = 1 ] ; then
+      APBackup ${SHELLSFILE}
+      echo ${1} | ${SED} 's/,/\
+/g' > ${SHELLSFILE}
+      APLog FIXED
+      return
+    fi  
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+SystemGeneral_CTRLALTDEL_RH()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi  
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; /:ctrlaltdel:/p" ${INITTABFILE})
+  if [[ "${1}" = "enabled" && -z "$ACTUALVAR" ]]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${1}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${INITTABFILE}
+      echo "ca::ctrlaltdel:/sbin/shutdown -t3 -r now" >> ${INITTABFILE}
+      return
+    fi
+  fi
+  if [[ "${1}" != "enabled" && ! -z "$ACTUALVAL" ]]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${1}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${INITTABFILE}
+      ${SED} "/.*:ctrlaltdel:.*/d" ${INITTABFILE} > inittabfile.tmp
+      mv inittabfile.tmp ${INITTABFILE}
+      #fix perms      
+      ${CHMOD} 644 ${INITTABFILE}
+      APLog FIXED
+      return    
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+  fi
+}  
+
+
+SystemGeneral_MotdMessage_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi  
+  ACTUALVAL="$(cat ${MOTDFILE})"
+  if [[ "$1" != "${ACTUALVAL}" ]]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${1}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${MOTDFILE}
+      echo $1 > ${MOTDFILE}
+      APLog FIXED
+      return
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+  fi
+
+}

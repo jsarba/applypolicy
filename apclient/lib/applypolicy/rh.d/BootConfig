@@ -1,0 +1,119 @@
+#!/usr/bin/ksh
+
+##both handle_[lilo|grub]_pass are very similar to one another, the only 
+##difference is the sed line should turn this into one function that 
+##expects a regular expesion as a second argument and a config file as 
+##the third
+#$1 the new password
+handle_lilo_pass ()
+{
+  ISITSET="$(${SED} -n '/\<password\>/p' "${LILOFILE}")"
+  if [ -z "${ISITSET}" ]; then
+    APLog "There is no password set for lilo!"
+    if [ ${FIXATE} = 1 ]; then
+      ${SED} "1i\
+password $1" ${LILOFILE} > bootfile.new
+      mv bootfile.new ${LILOFILE}
+      APLog "FIXED, remember to run lilo to commit the changes"
+      return
+    fi
+  fi
+  #end of no password area
+  PASSWORD="$(${SED} -n 's/\<password\> *= *\(.*\)/\1/p' "${LILOFILE}")"
+  if [ "$PASSWORD" != "$1" ]; then
+    #the password is wrong and we need to change it
+    APLog "the password is ${PASSWORD} and should be $1"
+    if [ ${FIXATE} = 1 ]; then
+      ${SED}  "s/\<password\>.*/password = $1/ " "${LILOFILE}" > bootfile.new
+      mv bootfile.new ${LILOFILE}
+      APLog "FIXED, remember to run lilo to commit the changes"
+      return
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+  fi
+}
+
+
+#$1 the new password
+handle_grub_pass ()
+{
+  ISITSET="$(${SED} -n '/\<password\>/p' "${GRUBFILE}")"
+  if [ -z "${ISITSET}" ]; then
+    APLog "There is no password set for grub!"
+    if [ ${FIXATE} = 1 ]; then
+      ${SED} "1i\
+password $1" ${GRUBFILE} > bootfile.new
+      mv bootfile.new ${GRUBFILE}
+      APLog "FIXED"
+      return
+    fi
+  fi
+  #end of no password area
+  PASSWORD="$(${SED} -n 's/\<password\> *\(.*\)/\1/p' "${GRUBFILE}")"
+  if [ "$PASSWORD" != "$1" ]; then
+    #the password is wrong and we need to change it
+    APLog "the password is ${PASSWORD} and should be $1"
+    if [ ${FIXATE} = 1 ]; then
+      ${SED}  "s/\<password\>.*/password $1/ " "${GRUBFILE}" > bootfile.new
+      mv bootfile.new ${GRUBFILE}
+      APLog "FIXED"
+      return
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+  fi
+}
+
+##$1 the new password
+BootConfig_password_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  if [ -e ${LILOFILE} ]; then
+    handle_lilo_pass "$1"
+  fi
+  if [ -e ${GRUBFILE} ]; then
+    handle_grub_pass "$1"
+  fi  
+}
+
+
+##Restricted is a lilo only option
+BootConfig_restricted_RH ()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  if [ -e ${LILOFILE} ]; then  
+  ISITSET="$(${SED} -n '/\<restricted\>/p' "${LILOFILE}")"
+  if [ -z "${ISITSET}" ]; then
+    APLog "There is no restricted password set for lilo!"
+    if [ ${FIXATE} = 1 ]; then
+      ${SED} "1i\
+restricted $1" ${LILOFILE} > bootfile.new
+      mv bootfile.new ${LILOFILE}
+      APLog "FIXED, remember to run lilo to commit the changes"
+      return
+    fi
+  fi
+  #end of no password area
+  PASSWORD="$(${SED} -n 's/\<restricted\> *= *\(.*\)/\1/p' "${LILOFILE}")"
+  if [ "$PASSWORD" != "$1" ]; then
+    #the password is wrong and we need to change it
+    APLog "the restricted password is ${PASSWORD} and should be $1"
+    if [ ${FIXATE} = 1 ]; then
+      ${SED}  "s/\<restricted\>.*/restricted = $1/ " "${LILOFILE}" > bootfile.new
+      mv bootfile.new ${LILOFILE}
+      APLog "FIXED, remember to run lilo to commit the changes"
+      return
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+  fi
+  fi
+}

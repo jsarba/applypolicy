@@ -1,0 +1,307 @@
+#!/usr/bin/ksh
+#
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Main Apply Policy program file.
+#
+#
+
+FileMode()
+{
+ls -ld $1 | ${AWK} '{print substr($0,2,3); print substr($0,5,3); print substr($0,8,3)}'  | ${AWK} 'BEGIN {
+PERMS[1]=0;
+PERMS[2]=0;
+PERMS[3]=0;
+SPECIAL=0;
+
+}
+
+{
+	if( $0 ~ /x/ )
+		PERMS[NR]+=1;
+	if( $0 ~ /w/ )
+		PERMS[NR]+=2;
+	if( $0 ~ /r/ )
+		PERMS[NR]+=4;
+#special cases
+#SUID
+	if ( NR == 1  && ($0 ~ /s/ || $0 ~ /S/) )
+		SPECIAL+=4; 
+#SGID	
+	if ( NR == 2 && ($0 ~ /S/ || $0 ~ /s/ ) )
+		SPECIAL+=2;
+#STICKY
+	if ( NR == 3 && ($0 ~ /t/ || $0 ~ /T/ ) )
+		SPECIAL+=1;
+	if ( $0 ~ /s/ || $0 ~ /t/ )
+		PERMS[NR]+=1;
+}
+
+END{
+print SPECIAL PERMS[1] PERMS[2] PERMS[3]
+}'
+}
+
+
+SetFile()
+{
+ FILE=$(echo ${1}|${SED} 's/[ |      ]*//g')
+ if [ ! -e ${FILE} ] ; then
+    APLog "file does not exist. FAILED"
+    return
+ fi
+ PERM=$(echo ${2}| ${AWK} -F: '{ print $3 }')
+ OWNER=$(echo ${2} | ${AWK} -F:  '{ print $1 ":" $2  }')
+ OWNER_ACT=$(ls -ld ${FILE} | ${AWK} '{print $3 ":"  $4}')
+ PERM_ACT=$(FileMode ${FILE})
+ PERM_ACT=$(echo $PERM_ACT| ${SED} 's/^0//') 
+  if [ "${PERM}" -ne "${PERM_ACT}" ] ; then
+     APLog "is ${PERM_ACT} and should be ${PERM}."
+     if [ ${FIXATE} = 1 ] ; then
+        chmod ${PERM} ${FILE}
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "PERMS:OK"
+     fi
+  fi    
+  if [ ${OWNER} != ${OWNER_ACT} ] ; then
+     APLog "is ${OWNER_ACT} and should be ${OWNER}."
+     if [ ${FIXATE} = 1 ] ; then
+        chown ${OWNER} ${FILE}
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OWNER:OK"
+     fi
+  fi
+}
+
+
+##handle_sshdoption
+##$1 option name
+##$2 expected value
+##extracts the real value of $1, logs and possibly change it
+handle_sshdoption()
+{
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1} \(.*\)/\1/p" ${SSHDCONF})
+  if [ "${2}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${SSHDCONF}
+      #change or add the option
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1} ${2} >> ${SSHDCONF}
+      else
+        ${SED} "s/${1} *.*/${1} ${2}/" ${SSHDCONF} > sshdconfig.tmp
+        mv sshdconfig.tmp ${SSHDCONF}
+        #fix perms
+        ${CHMOD} 600 ${SSHDCONF}
+     fi
+     return
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+#the sshd file does not contain the login message
+#we have the path to that file in: SSHDLMFILE
+#the LM in SSHDLMFILE stands for login message
+#if the file does not exist and fixate is on, it will
+#create it, the logs might look a little weird
+ssh_handle_LoginMessage()
+{
+  ACTUALVAR="$(cat ${SSHDLMFILE} 2>/dev/null)"
+  if [ "${1}" != "${ACTUALVAR}" ]; then
+    APLog "Is ${ACTUALVAR:-NONEXISTENT} and should be ${1}"
+    DIFER=1
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${SSHDLMFILE}
+      echo ${1} > ${SSHDLMFILE}
+      return
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+
+
+#
+# Makes a diff betwin $1 and $2. In fix mode overwrites $1 with $2
+APFileDiff()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+   return
+ fi
+
+ #If the file dosnt exist its an error
+ if [ ! -f ${1} ] ; then
+    APLog "The file ${1} dosn\'t exist."
+    if [ ${FIXATE} = 1 ] ; then
+       mv -f ${2} ${1}
+       APLog "${1} FIXED"
+    fi
+    return
+ fi
+
+ CHECK=$(${DIFF} ${1} ${2} > /dev/null 2>&1)
+
+  if [ $? -ne 0 ] ; then
+     APLog "The file ${1} differs with definition."
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup ${1}
+        mv -f ${2} ${1}
+        APLog "${1} FIXED"
+        return
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  
+
+
+}
+
+
+#
+# This function checks inetd.conf for a service.
+# If the service is down and it should be up, the line which starts the
+# server should be in the file commented out.
+# $1 = Service name as apears on inetd.conf, fist word of the line
+# $2 = state it should be: true or false
+handle_inetd ()
+{
+ #check if true, up
+ if [ "${2}" = "true" ] ; then
+    #check if its there
+    CHECK=$(cat ${INETD}  | ${SED} -n "/^${1}[ 	]/p")
+    if [ -z "${CHECK}" ] ; then
+       #its not there
+       APLog "Service ${1} is down and should be up."
+       DIFER=1
+       if [ ${FIXATE} = 1 ] ; then
+          #try to set it up
+          CHECK=$(cat ${INETD}  | ${SED} -n "/^#${1}[	 ]/p")
+          if [ -z "${CHECK}" ] ; then
+             #It should be up but there is nline refering this service in the file
+             APLog "Service ${1} is down and should be up, but there is no line to uncomment on the file."
+             APLog "FAILED"
+             return
+          fi
+          #uncomment the line
+          rm -f ${TEMP}
+          cat ${INETD} | ${SED} -e "s/^#${1}[	 ]/${1} /g" > ${TEMP}
+          APBackup ${INETD}
+          mv -f ${TEMP} ${INETD}
+          APLog "FIXED"
+          return
+       fi
+    else
+       #Everyhing is fine
+       if [ ${LOG_OK} = 1 ] ; then
+          APLog "OK"
+       fi
+    fi
+ else #check if false, down
+    CHECK=$(cat ${INETD}  | ${SED} -n "/^${1}[	 ]/p")
+    if [ -n "${CHECK}" ] ; then
+       APLog "Service ${1} is up and should be down."
+       DIFER=1
+       if [ ${FIXATE} = 1 ] ; then
+          rm -f ${TEMP}
+          cat ${INETD} | ${SED}  -e "s/^${1}[	 ]/#${1} /" > ${TEMP}
+          APBackup ${INETD}
+          mv -f ${TEMP} ${INETD}
+          APLog "FIXED"
+          return
+       fi
+    else
+       #Everyhing is fine
+       if [ ${LOG_OK} = 1 ] ; then
+          APLog "OK"
+       fi
+    fi
+ fi
+}
+
+#
+# This function checks inittab for a service.
+# If the service is down and it should be up, the line which starts the
+# server should be in the file commented out. The comments in this file
+# are lines starting with a :
+# $1 = Service name as apears on inittab, fist word of the line
+# $2 = state it should be: true or false
+handle_inittab()
+{
+ #check if true, up
+ if [ "${2}" = "true" ] ; then
+    #check if its there
+    CHECK=$(cat ${ITAB}  | ${SED} -n "/^${1}:/p")
+    if [ -z "${CHECK}" ] ; then
+       #its not there
+       APLog "Service is down and should be up."
+       DIFER=1
+       if [ ${FIXATE} = 1 ] ; then
+          #try to set it up
+          CHECK=$(cat ${ITAB}  | ${SED} -n "/^#${1}:/p")
+          if [ -z "${CHECK}" ] ; then
+             #It should be up but there is no line refering this service in the file
+             APLog "Service is down and should be up, but there is no line to uncomment on the file."
+             APLog "FAILED"
+             return
+          fi
+          #uncomment the line
+          rm -f ${TEMP}
+          cat ${ITAB} | ${SED}  -e "s/^#${1}:/${1}:/" > ${TEMP}
+          APBackup ${ITAB}
+          mv -f ${TEMP} ${ITAB}
+          APLog "FIXED"
+          return
+       fi
+    else
+       #Everyhing is fine
+       if [ ${LOG_OK} = 1 ] ; then
+          APLog "OK"
+       fi
+    fi
+ else #check if false, down
+    CHECK=$(cat ${ITAB}  | ${SED} -n "/^${1}:/p")
+    if [ -n "${CHECK}" ] ; then
+       APLog "Service ${1} is up and should be down."
+       DIFER=1
+       if [ ${FIXATE} = 1 ] ; then
+          rm -f ${TEMP}
+          cat ${ITAB} | ${SED}  -e "s/^${1}:/#${1}:/" > ${TEMP}
+          APBackup ${ITAB}
+          mv -f ${TEMP} ${ITAB}
+          APLog "FIXED"
+          return
+       fi #fixate
+    else
+       #Everyhing is fine
+       if [ ${LOG_OK} = 1 ] ; then
+          APLog "OK"
+       fi
+    fi #if empty is false
+ fi
+}
+
+
+GroupSecurity__AIX()
+{
+if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+}
+
+

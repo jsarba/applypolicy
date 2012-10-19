@@ -1,0 +1,285 @@
+#!/usr/bin/ksh 
+##handle_sshdoption
+##$1 option name
+##$2 expected value
+##extracts the real value of $1, logs and possibly change it
+handle_sshdoption()
+{ 
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1} \(.*\)/\1/p" ${SSHDCONF})
+  if [ "${2}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${SSHDCONF}
+      #change or add the option      
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1} ${2} >> ${SSHDCONF}
+      else    
+        ${SED} "s/${1} *.*/${1} ${2}/" ${SSHDCONF} > sshdconfig.tmp
+        mv sshdconfig.tmp ${SSHDCONF}
+        #fix perms      
+        ${CHMOD} 600 ${SSHDCONF}
+     fi 
+     return
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}  
+
+SSHPolicy_PermitRootLogin_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption PermitRootLogin "${1}"
+}
+
+SSHPolicy_X11Forwarding_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption X11Forwarding "${1}"
+}
+
+SSHPolicy_PermitEmptyPasswords_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption PermitEmptyPasswords "${1}"
+}
+
+SSHPolicy_PasswordAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption PasswordAuthentication "${1}"
+}
+
+SSHPolicy_Protocol_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption Protocol "${1}"
+}
+
+SSHPolicy_IgnoreRhosts_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption IgnoreRhosts "${1}"
+}
+
+SSHPolicy_IgnoreRhosts_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption IgnoreRhosts "${1}"
+}
+
+SSHPolicy_PrintMotd_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption PrintMotd "${1}"
+}
+
+SSHPolicy_PrintLastLog_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption PrintLastLog "${1}"
+}
+
+SSHPolicy_LoginGraceTime_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption LoginGraceTime "${1}"
+}
+
+
+SSHPolicy_LogLevel_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption LogLevel "${1}"
+}
+
+SSHPolicy_Banner_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption Banner "${1}"
+}
+
+SSHPolicy_Subsystem_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption Subsystem "${1}"
+}
+
+SSHPolicy_AllowGroups_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption AllowGroups "${1}"
+}
+
+SSHPolicy_MaxStartups_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption MaxStartups "${1}"
+}
+
+SSHPolicy_ListenAddress_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption ListenAddress "${1}"
+}
+
+SSHPolicy_AllowTcpForwarding_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption AllowTcpForwarding "${1}"
+}
+
+SSHPolicy_GatewayPorts_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption GatewayPorts "${1}"
+}
+
+SSHPolicy_SyslogFacility_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption SyslogFacility "${1}"
+}
+
+SSHPolicy_Ciphers_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption Ciphers "${1}"
+}
+
+SSHPolicy_RSAAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption RSAAuthentication "${1}"
+}
+
+SSHPolicy_RSAAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption RSAAuthentication "${1}"
+}
+
+SSHPolicy_PubkeyAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption RSAAuthentication "${1}"
+}
+
+SSHPolicy_RhostsRSAAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption RhostsRSAAuthentication "${1}"
+}
+
+SSHPolicy_RhostsRSAAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption RhostsRSAAuthentication "${1}"
+}
+
+SSHPolicy_ChallengeResponseAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption ChallengeResponseAuthentication "${1}"
+}
+
+SSHPolicy_KerberosAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption KerberosAuthentication "${1}"
+}
+
+SSHPolicy_KerberosAuthentication_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption KerberosAuthentication "${1}"
+}
+
+SSHPolicy_UsePrivilegeSeparation_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption UsePrivilegeSeparation "${1}"
+}
+
+SSHPolicy_PAMAuthenticationViaKbdInt_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_sshdoption PAMAuthenticationViaKbdInt "${1}"
+}
+SSHPolicy_LoginMessage_RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  ssh_handle_LoginMessage $1
+}
+
+
+SSHPolicy__RH()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+}

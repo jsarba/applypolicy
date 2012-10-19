@@ -1,0 +1,101 @@
+#!/bin/ksh
+
+CronAtPolicy_CronAllow_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${CRONALLOW}" ] ; then
+     APLog "${CRONALLOW} does not exist. FAILED"
+     return
+  fi
+  if [ -z "$(${GREP} -e "^\<${1}\>" "${CRONALLOW}")" ]; then
+     APLog "The user ${1} should be allowed to use cron and it is not."
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup "${CRONALLOW}"
+        echo ${1} >> "${CRONALLOW}"
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+}
+
+
+CronAtPolicy_CronDeny_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${CRONDENY}" ] ; then
+     APLog "${CRONDENY} does not exist. FAILED"
+     return
+  fi
+  if [ -z "$(${GREP} -e "^\<${1}\>" "${CRONDENY}")" ]; then
+     APLog "The user ${1} should not be allowed to use cron and it is."
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup "${CRONDENY}"
+        echo ${1} >> "${CRONDENY}"
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+}
+
+
+CronAtPolicy_AtAllow_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${ATALLOW}" ] ; then
+     APLog "${ATALLOW:-NONEXISTENT} does not exist. FAILED"
+     return
+  fi
+  if [ -z "$(${GREP} -e "^\<${1}\>" "${ATALLOW}")" ]; then
+     APLog "The user ${1} should be allowed to use at and is not."
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup "${ATALLOW}"
+        echo ${1} >> "${ATALLOW}"
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+}
+
+
+CronAtPolicy_AtDeny_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${ATDENY}" ] ; then
+     APLog "${ATDENY:-NONEXISTENT} does not exist. FAILED"
+     return
+  fi
+  if [ -z "$(${GREP} -e "^\<${1}\>" "${ATDENY}")" ]; then
+     APLog "The user ${1} should not be allowed to use at and it is."
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup "${ATDENY}"
+        echo ${1} >> "${ATDENY}"
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+}
+

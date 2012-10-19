@@ -1,0 +1,572 @@
+#!/usr/bin/ksh
+#version=1.7.9
+#
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Main Apply Policy program file.
+#
+#
+
+#INSTALLATION CONFIGS
+#DONT TOUCH THIS !!!!
+PREFIX="/opt/shellcode/applypolicy"
+USER="willchange"
+USERHOME="/home/willchange"
+##
+
+#END INSTALLATION CONFIGS
+
+
+#this is a flag to test if there is a function
+TESTFLAG=0
+#This three variables are part of the function name
+#they are global to be used in the LOG subsystem
+SECTION=""
+PLAT=""
+LABEL=""
+
+#This run date, used for logging and backup
+RUNTIME=""
+
+#Log to  stdout
+STD_LOG=1
+#run with -f
+FIXATE=0
+#just one  seccion
+# not anymore! you can use many sections now
+RUNSEC=""
+#Do an update
+UPDATE=0
+#Make backups?
+MAKEBKP=1
+#Log correct values
+LOG_OK=0
+#Log to syslog
+LOGSYSLOG=1
+#Diferences found? Used for log to syslog
+DIFER=0
+#Files fixed?
+CHANGED=0
+#Need help?
+HELP=0
+
+
+#Paths
+
+GREP=$(which grep 2>/dev/null)
+if [ ! -f "${GREP}" ];
+then
+	GREP=""
+fi
+AWK=$(which awk 2>/dev/null)
+if [ ! -f "${AWK}" ];
+then
+	AWK=""
+fi
+SED=$(which sed 2>/dev/null)
+if [ ! -f "${SED}" ];
+then
+	SED=""
+fi
+DIFF=$(which diff 2>/dev/null)
+if [ ! -f "${DIFF}" ];
+then
+	DIFF=""
+fi
+DATE=$(which date 2>/dev/null)
+if [ ! -f "${DATE}" ];
+then
+	DATE=""
+fi
+UNAME=$(which uname 2>/dev/null)
+if [ ! -f "${UNAME}" ];
+then
+	UNAME=""
+fi
+COMP=$(which compress 2>/dev/null)
+if [ ! -f "${COMP}" ];
+then
+	COMP=$(which gzip 2>/dev/null)
+fi
+if [ ! -f "${COMP}" ];
+then
+	COMP=""
+fi
+CFG_FILE="${PREFIX}/var/lib/applypolicy/policy.def"
+NEW_FILE="${USERHOME}/update.def"
+LOG_FILE="${PREFIX}/var/log/applypolicy.log"
+BKP_DIR="${PREFIX}/var/lib/applypolicy/backups/"
+
+##
+# Funciones 
+Detect_PLAT()
+{
+ HNAME=$(${UNAME} -n)
+ OS=$(${UNAME} -a | ${AWK} {'print $1'})
+ HW=$(${UNAME} -m)
+ 
+ if [ "${OS}" = "SunOS" ] ; then
+     APLog "SunOS Detectado"
+     PLAT="SOL"
+     #Incluyo el archivo correspondiente
+     . ${PREFIX}/lib/applypolicy/ap_sol
+ elif [ "${OS}" = "AIX" ] ; then
+     APLog "AIX Detectado"
+     cat /etc/release 2> /dev/null
+     PLAT="AIX"
+     #Incluyo el archivo correspondiente
+     . ${PREFIX}/lib/applypolicy/ap_aix
+ elif [ "${OS}" = "Linux" ]; then
+     APLog "Linux Detectado"
+     if [ -f /etc/redhat-release ]; then
+       #Incluyo el archivo correspondiente
+       PLAT="RH"
+       . ${PREFIX}/lib/applypolicy/ap_rh
+     elif [ -f /etc/debian_version ]; then
+       #Incluyo el archivo correspondiente
+	#this looks extremely wrong, i'll comment it and hope for the best
+	#changed AIX to DEBIAN in plat      
+	PLAT="DEBIAN"
+       #test test test test test test test test test
+       #. ${PREFIX}/lib/applypolicy/ap_aix
+     else
+       # 1>&2 ?
+       APLog "Distribucion NO Soportada"
+     fi
+ fi
+
+}
+
+
+#General purpose log function
+APLog()
+{
+ LOG="$LABEL: ${1}"
+ if [ ${STD_LOG} = 1 ] ; then
+    echo ${LOG}
+ fi
+
+ echo ${LOG} >> ${LOG_FILE}
+}
+
+
+APBackup()
+{
+ if [ ${MAKEBKP} = 1 ] ; then
+    if [ ! -d "${BKP_DIR}/${RUNTIME}" ] ; then
+       mkdir -p "${BKP_DIR}/${RUNTIME}"
+       if [ ! -d "${BKP_DIR}/${RUNTIME}" ] ; then
+          APLog "ERROR: Unable to make backup directory."
+          return
+       fi
+    fi
+    #if the backup wasn't previusly made, make it
+    if [ ! -f "${BKP_DIR}/${RUNTIME}/${1}" ] ; then
+       FNAME=$(echo ${1}|${SED} -e 's/.*\///g')
+       FPATH=$(echo ${1}|${SED} -e "s/${FNAME}$//g")
+       mkdir -p "${BKP_DIR}/${RUNTIME}/${FPATH}"
+       cp "${1}" "${BKP_DIR}/${RUNTIME}/${1}"
+       #Something fixed flag
+       CHANGED=1
+    fi
+ fi
+}
+
+
+try_run()
+{
+ TESTFLAG=1
+ ${1} 2>/dev/null
+ if [ "$?" != "0" ] ; then
+    LABEL="TryRun"
+    APLog "No existe $1"
+    LABEL=""
+    return
+ fi
+ TESTFLAG=0
+ ${1} "${2}"
+}
+
+
+#function that verifies and copies the ap-update.def
+#it verifies that it exists and moves it; if a diff with the old 
+#one returns something it logs itVerifica 
+do_update()
+{
+ LABEL="Update"
+
+ if [ ! -f ${NEW_FILE} ]; then
+    APLog "Warning! No policy update found"
+    LABEL=""
+    return
+ fi
+
+ #i check for the policies file
+ if [ ! -f ${CFG_FILE} ]; then
+    #no esta, primera vez que llega
+    APLog "First time policy"
+ else
+    #if it's there verify the policies
+    DIFER=$(${DIFF} "${CFG_FILE}" "${NEW_FILE}")
+    echo ${DIFER}
+   
+    if [ "${DIFER}" = "" ]; then
+       APLog "No changes in the policies"
+    else
+       APLog "the following changes in the policies have been found:"
+       APLog ${DIFER}
+    fi
+ fi
+
+
+#Move the file to my dir and set new perms
+
+ mv -f ${NEW_FILE} ${CFG_FILE}
+ chown root ${CFG_FILE}
+ chmod 0600 ${CFG_FILE}
+
+ LABEL=""
+
+}
+
+
+####
+# MAIN
+####
+
+#Check command line
+while getopts nluqfcs: o
+do      case "$o" in
+        s)      RUNSEC="$RUNSEC $OPTARG";;
+        c)      FIXATE=0;;
+        f)      FIXATE=1;;
+        q)      STD_LOG=0;;
+        u)      UPDATE=1;;
+        l)      LOG_OK=1;;
+        n)      LOGSYSLOG=0;;
+	?)      HELP=1;;
+        esac
+done
+
+# Check no-options or need help
+if [ ${#} -eq 0 -o ${HELP} -eq 1 ] ; then
+                echo "Usage: ${0} [-q] [-u] [-s] [-l] [-n] ([-c] || [-f]) [-s SectionName]"
+                echo "       q: Do not log to stdout"
+                echo "       u: Update the policy"
+                echo "       c: runs in check only mode (default)"
+                echo "       f: runs in fixate mode"
+                echo "       s: Only process SectionName"
+                echo "       l: Log correct policies"
+                echo "       n: Do not log conclusions to syslog"
+                exit 1
+
+fi
+
+if [ ! -f "${AWK}" ] ; then
+   APLog "You need awk to run Apply Policy."
+   exit 2
+fi
+if [ ! -f "${SED}" ] ; then
+   APLog "You need sed to run Apply Policy."
+   exit 2
+fi
+if [ ! -f "${DATE}" ] ; then
+   APLog "You need date to run Apply Policy."
+   exit 2
+fi
+if [ ! -f "${GREP}" ] ; then
+   APLog "You need grep to run Apply Policy."
+   exit 2
+fi
+if [ ! -f "${DIFF}" ] ; then
+   APLog "You need diff to run Apply Policy."
+   exit 2
+fi
+if [ ! -f "${UNAME}" ] ; then
+   APLog "You need uname to run Apply Policy."
+   exit 2
+fi
+
+if [ $(id | ${SED} -e 's/uid=\(.[0-9]*\).*/\1/') -ne 0 ] ; then
+   echo "You need to be root to run Apply Policy."
+   exit 1
+fi
+
+
+RUNTIME=$(${DATE} +'%d.%m.%Y-%H.%M.%S')
+
+
+APLog "----------------"
+APLog "Apply Policy 1.0 Started  ${RUNTIME}"
+
+Detect_PLAT
+ if [ "${PLAT}" = "" ] ; then
+    LABEL="ERROR"
+    APLog "Apply Policy coulnd't determine your O.S." 1>&2
+    exit
+ fi
+
+ if [ "${UPDATE}" = 1 ] ; then
+    do_update
+    exit
+ fi
+
+ if [ ! -f "${CFG_FILE}" ] ; then
+    LABEL="WARN"
+    APLog "Policy def not found: ${CFG_FILE}. Creating it."
+    touch ${CFG_FILE}
+ fi
+
+ #Include Handles
+ . ${PREFIX}/lib/applypolicy/handles
+
+ exec 3< ${CFG_FILE}
+PAMTMP=pam.tmp
+DIFFFILE=diff.tmp
+PAMPATH="/etc/pam.d"
+
+#Main loop
+ #strips lines that start with #
+ while read <&3 linea
+   do
+     linea=$(echo ${linea} | ${SED} "s/^[ 	]//" | ${GREP} -v "^#")
+     if [ "${linea}" = "" ] ; then
+        continue;
+     fi
+     #the first column read before the  = sign is assigned to LABEL
+     #the second is assigned to VALOR
+     LABEL=$(echo ${linea} | ${AWK} -F= '{print $1}')
+     #Trim
+     LABEL=${LABEL## }; LABEL=${LABEL%% };
+     VALOR=$(echo ${linea} | ${AWK} -F= '{print $2}')
+     #Trim
+     VALOR=${VALOR## }; VALOR=${VALOR%% };
+     #found a section?
+     if [ "${LABEL}"  = "Section" ]; then
+        SECTION=${VALOR}
+        #This is for log the section name found
+	if [ ! -z "${RUNSEC}" -a -z "$(echo -n ${RUNSEC} | ${GREP} ${SECTION})" ] ; then
+                 APLog "${SECTION} [disable]"
+        else
+                 APLog "${SECTION}"
+        fi
+	#special section
+	if [ "${SECTION}" = "PAMPolicy" ]; then
+               rm -f pam.tmp 2>/dev/null
+               while read <&3 linea; do
+                   if [ ! -z "${RUNSEC}" -a -z "$(echo -n ${RUNSEC} |${GREP} ${SECTION})" ] ; then
+                      break
+                   fi
+                   if [ "${linea}" = "EndSection" ] ; then
+                        break;
+                   fi
+                   echo $linea>>${PAMTMP}
+               done
+               while [ -n "$(${SED} -n '1p' ${PAMTMP} 2>/dev/null )" ]; do
+                        PAMFILE=$(${SED} '1s/\(.*\)@.*=.*/\1/;q' ${PAMTMP})
+                        ${SED} -n "s/\"//g;s/${PAMFILE}@.*= //p;" ${PAMTMP} > ${DIFFFILE}
+			${SED} -i 's/\([^\\]\):/\1 /g;s/\([^\\]\)\\//g' ${DIFFFILE}
+                        ${SED} "/${PAMFILE}@/d" ${PAMTMP} > ${PAMTMP}.new
+                        mv ${PAMTMP}.new ${PAMTMP}
+                        #cp ${PAMPATH}/${PAMFILE##PAM_} pam.orig #2>/dev/null
+                        if cp ${PAMPATH}/${PAMFILE##PAM_} pam.orig 2>/dev/null; then
+			   ${SED} -i '/^#/d' pam.orig
+                           if [ "$(${DIFF} -ub pam.orig ${DIFFFILE} | wc -l)" != "0" ]; then
+                                echo uncompliant pam file: ${PAMPATH}/${PAMFILE##PAM_}
+                                if [ ${FIXATE} = 1 ]; then
+                                     APBackup ${PAMPATH}/${PAMFILE##PAM_}
+                                     cp ${DIFFFILE} ${PAMPATH}/${PAMFILE##PAM_}
+				     APLog "FIXED"
+                                fi
+                           else
+				if [ ${LOG_OK} = 1 ] ; then
+                                    APLog "OK"
+                                    echo compliant pam file ${PAMPATH}/${PAMFILE##PAM_}
+				fi
+                           fi
+                        else
+                           echo could not find ${PAMPATH}/${PAMFILE##PAM_}
+                           if [ ${FIXATE} = 1 ]; then
+                              echo creating...
+                              cp ${DIFFFILE} ${PAMPATH}/${PAMFILE##PAM_}
+                           fi
+                        fi
+                        #echo ${PAMFILE}
+               done
+               rm ${DIFFFILE} ${PAMTMP} pam.orig 2>/dev/null
+	       continue
+        fi
+        #Special Section
+        if [ "${SECTION}" = "FileDiff" ]; then
+	   read <&3 linea 
+           if [ $? -ne 0 ] ; then
+              APLog "Malformed def file"
+              break
+           fi
+           LABEL=$(echo ${linea} | ${AWK} -F= '{print $1}')
+           #Trim
+           VALOR=$(echo ${linea} | ${AWK} -F= '{print $2}')
+ 	   LABEL=$(echo ${linea} | ${SED} 's/^[	 ]*//; /^#/d; /^$/d' | ${AWK} -F= '{print $1}')
+           if [ "${LABEL}" = "EndSection" -o "${LABEL}" != "FileName" ] ; then
+              #leave the while and read linea of this section
+              APLog "Malformed FileDiff Section: Missing filename."
+              break
+           fi
+           FILENAME=${VALOR}
+           #Clear temp file
+           > /tmp/apfilediff.tmp
+           while read <&3 linea
+              do
+                if [ "${linea}" = "EndSection" ] ; then
+                   #fin de archivo temp
+                   break
+                fi
+                echo ${linea} >> /tmp/apfilediff.tmp
+              done
+           APFileDiff ${FILENAME} /tmp/apfilediff.tmp
+           #this break sends me to the main loop to read a new
+           #section
+           continue
+        fi #fi special section filesettings
+
+        #Special Section
+        if [ "${SECTION}" = "IPTables" ]; then
+	   read <&3 linea 
+           if [ $? -ne 0 ] ; then
+              APLog "Malformed def file"
+              break
+           fi
+           LABEL=$(echo ${linea} | ${AWK} -F= '{print $1}')
+           #Trim
+           LABEL=${LABEL## }; LABEL=${LABEL%% };
+           VALOR=$(echo ${linea} | ${AWK} -F= '{print $2}')
+           if [ "${LABEL}" = "EndSection" -o "${LABEL}" != "FileName" ] ; then
+              #leave the while and read linea of this section
+              APLog "Malformed FileDiff Section: Missing filename."
+              break
+           fi
+	   #Check if this section should be run
+	   if [ ! -z "${RUNSEC}" -a -z "$(echo -n ${RUNSEC} | ${GREP} ${SECTION})" ] ; then
+		break
+	   fi
+           FILENAME=${VALOR}
+           #Clear temp file
+           > /tmp/apiptables.tmp
+           while read <&3 linea
+              do
+                if [ "${linea}" = "EndSection" ] ; then
+                   #fin de archivo temp
+                   break
+                fi
+                echo ${linea} >> /tmp/apiptables.tmp
+              done
+           APFileDiff ${FILENAME} /tmp/apiptables.tmp
+           #this break sends me to the main loop to read a new
+           #section
+           continue
+        fi #fi special section filesettings
+
+        # Special Section
+        if [ "${SECTION}" = "FilesSettings" ]; then
+           #Itero dentro de la seccion
+           while read <&3 linea
+              do
+	       linea=$(echo ${linea} | sed '/[^a-z|^A-Z|^\/]+#/d;s/\([^#]*\)#.*/\1/')
+	       if [ -n "${linea}" ]; then
+                LABEL=$(echo ${linea} | ${AWK} -F= '{print $1}')
+                #Trim
+                LABEL=${LABEL## }; LABEL=${LABEL%% };
+                if [ "${LABEL}" = "EndSection" ] ; then
+                  #Leave the while and read linea of this section
+                  break
+                fi
+                #Check if this section should be run
+		if [ ! -z "${RUNSEC}" -a -z "$(echo -n ${RUNSEC} | ${GREP} ${SECTION})" ] ; then
+                   break
+                fi
+
+                VALOR=$(echo ${linea} | ${AWK} -F= '{print $2}')
+                #Trim
+                VALOR=${VALOR## }; VALOR=${VALOR%% };
+                SetFile /${LABEL} ${VALOR}
+	       fi
+              done
+           #this break sends me to the main loop to read a new
+           #section
+           continue
+        fi #fi special section filesettings
+        #No more special section
+        while read <&3 linea
+        do
+          #Check if this section should be run
+	  if [ ! -z "${RUNSEC}" -a -z "$(echo -n ${RUNSEC} | ${GREP} ${SECTION})" ] ; then
+             break
+          fi
+          LABEL=$(echo ${linea} | ${SED} 's/^[	 ]*//; /^#/d; /^$/d' |${AWK} -F= '{print $1}')
+	  if [ -z "${LABEL}" ] ; then
+	  	continue;
+	  fi
+          #Trim
+          LABEL=${LABEL## }; LABEL=${LABEL%% };
+          if [ "${linea}" = "" ] ; then
+             continue;
+          fi
+          if [ "${LABEL}" = "EndSection" ] ; then
+             #leave the  while and read linea of this seccion
+             break
+          fi
+          VALOR=$(echo ${linea} | ${SED} -e 's/.*=//')
+          #Trim
+          VALOR=${VALOR## }; VALOR=${VALOR%% };
+          FUNCTION="$SECTION"_"$LABEL"_"$PLAT"
+          #functions cannot have .'s or -'s, change them to _
+	  FUNCTION=$(echo ${FUNCTION} | ${SED} 's/\./_/g; s/-/_/g')
+	  try_run ${FUNCTION} "${VALOR}"
+        done
+     fi
+     #i can only be here if the programme is done or because it read 
+     #something that is not a section or i left a section
+   done
+
+
+ exec 3>&-
+
+ if [ ${CHANGED} = 1 ] ; then
+    LABEL="Back up system"
+    APLog "Compressing backup..."
+    MSG=$(tar cf "${BKP_DIR}/${RUNTIME}.tar" "${BKP_DIR}/${RUNTIME}")
+    if [ $? -ne 0 ] ; then
+       APLog "There where problems creating a tar file with the backup."
+       APLog "${MSG}"
+       exit 3
+    fi
+    MSG=$(${COMP} "${BKP_DIR}/${RUNTIME}.tar")
+    if [ $? -ne 0 ] ; then
+       APLog "There where problems compressing the tar file with the backup."
+       APLog "${MSG}"
+       exit 3
+    fi
+    #Check the file is really there
+    if [ -f "${BKP_DIR}/${RUNTIME}.tar.Z" ] ; then
+       #remove the directory
+       rm -rf "${BKP_DIR}/${RUNTIME}"
+    fi
+ fi
+
+ LOGGER=$(which logger)
+
+ if [ ${LOGSYSLOG} = 1 ] ; then
+    if [ ${DIFER} = 1 ] ; then
+       ${LOGGER} -p auth.alert  "Apply Policy found differences between the system and the required policy."
+    fi
+    if [ ${CHANGED} = 1 ] ; then
+       ${LOGGER} -p auth.alert "Apply Policy fixed differences between the system and the required policy."
+    fi
+ fi
+
+
+ LABEL=""
+ APLog "End check"
+ APLog "----------------"
+
+

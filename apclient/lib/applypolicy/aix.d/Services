@@ -1,0 +1,659 @@
+#!/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+
+
+#System Services launched by inetd or inittab
+Services_bootps_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_chargen_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_cmsd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_comsat_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_daytime_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_discard_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_dtspc_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_echo_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_exec_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_finger_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_ftp_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_imap2_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_klogin_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_kshell_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_login_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_netstat_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_ntalk_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_pcnfsd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_pop3_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+
+}
+
+
+Services_rexd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_quotad_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_rstatd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_rusersd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_rwalld_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_shell_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_sprayd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_talk_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_telnet_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_tftp_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_time_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_ttdbserver_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_uucp_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+
+  handle_inetd "${LABEL}" "${1}"
+}
+
+
+Services_dt_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_dt_nogb_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_httpdlite_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_i4ls_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_imnss_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_imqss_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_lpd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_nfs_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab rcnfs "${1}"
+}
+
+
+Services_piobe_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_qdaemon_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_uprintfd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_writesv_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_xdm_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_inittab "${LABEL}" "${1}"
+}
+
+
+Services_autoconf6_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+ handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_dhcpcd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_dhcprd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_dhcpsd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_dpid2_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_gated_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_inetd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_mrouted_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_names_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_ndp_host_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_ndp_router_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_portmap_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_routed_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+  
+}
+
+
+Services_rwhod_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+  
+}
+
+
+Services_sendmail_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+  
+}
+
+
+Services_snmpd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+  
+}
+
+
+Services_syslogd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_timed_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_xntpd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+
+
+Services_dtlogin_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ;then
+     return
+  fi
+  handle_rctcpd "${LABEL}" "${1}"
+}
+

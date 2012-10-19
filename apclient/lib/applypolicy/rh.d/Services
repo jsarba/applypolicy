@@ -1,0 +1,504 @@
+#!/usr/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+#services section 
+##$1 service name
+##$2 state [true|false]
+handle_xinetd_serv ()
+{
+  #checking whether the file exists  
+  if [ ! -e "${XINETDDIR}/$1" ]; then
+    APLog "Service $1 is not currently handled by xinetd"
+    return
+  fi 
+  CURRSTATE="$(${SED} -n  's/[ \t]\<disable\>.*= \(.*\)/\1/p' ${XINETDDIR}/$1)"
+  if [[ $CURRSTATE == "no" && "$2" == "false" ]]; then
+    APLog "Service $1 is \"disable=${CURRSTATE:-NONEXISTENT}\" and this services should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${XINETDDIR}/$1
+      ${SED}  '/[ \t]\<disable\>.*=/{
+s/no/yes/
+}' ${XINETDDIR}/$1 > service.bkp
+mv service.bkp ${XINETDDIR}/$1
+    APlog FIXED
+    return
+    fi 
+   fi
+  if [[ $CURRSTATE == "yes" && "$2" == "true" ]]; then
+    APLog "Service $1 is \"disable=${CURRSTATE:-NONEXISTENT}\" and this services should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${XINETDDIR}/$1
+      ${SED}  '/[ \t]\<disable\>.*=/{
+s/yes/no/
+}' ${XINETDDIR}/$1 > service.bkp
+mv service.bkp ${XINETDDIR}/$1
+      APlog FIXED
+    fi 
+   fi
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+}
+
+##$1 service name
+##$2 state [true|false]
+handle_regular_serv ()
+{
+  SERVICE="$(${CHKCONFIG} --list $1 2>/dev/null| ${SED} -n 's/\<yum\>\(.*\)/\1/p')"
+
+  if [ -z "${SERVICE}" ]; then
+    APLog "Service $1 was not implemented "
+    return  
+  fi  
+
+  ENABLED="$(echo ${SERVICE} | ${SED} '/on/d')"
+  if [[ -z "${ENABLED}" && "$2" == "true" ]]; then
+    APLog "Service $1 is disabled and should be enabled"
+    if [ "${FIXATE}" == 1 ]; then
+      ${CHKCONFIG} $1 on
+      APLog "FIXED"
+      return     
+    fi
+  fi
+  if [[ ! -z "${ENABLED}" && "$2" == "false" ]]; then
+    APLog "Service $1 is enabled and should be disabled"
+    if [ "${FIXATE}" == 1 ]; then
+      ${CHKCONFIG} $1 off
+      APLog "FIXED"
+      return     
+    fi
+  fi
+} 
+
+
+##functions related to particular services
+#these functions turn on an off the tcp and udp version of the service if available
+#$1 true|false
+Services_chargen_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "chargen" $1
+  handle_xinetd_serv "chargen-udp" $1
+}
+
+
+Services_daytime_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "daytime" "$1"
+  handle_xinetd_serv "daytime-udp" "$1"
+}
+
+Services_echo_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "echo" "$1"
+  handle_xinetd_serv "echo-udp" "$1"
+}
+
+Services_time_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "time" "$1"
+  handle_xinetd_serv "time-udp" "$1"
+}
+
+Services_kshell_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "kshell" "$1"
+}
+
+Services_talk_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "talk" "$1"
+}
+
+Services_klogin_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "klogin" "$1"
+}
+
+Services_rsync_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "rsync" "$1"
+}
+
+Services_ekrb5_telnet_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "ekrb5-telnet" "$1"
+}
+
+Services_eklogin_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "eklogin" "$1"
+}
+
+Services_krb5_telnet_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "krb5-telnet" "$1"
+}
+
+Services_telnet_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "telnet" "$1"
+}
+
+Services_rsh_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "rsh" "$1"
+}
+
+Services_auth_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "auth" "$1"
+}
+
+Services_bootps_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "bootps" "$1"
+}
+
+Services_comsat_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "comsat" "$1"
+}
+
+Services_exec_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "exec" "$1"
+}
+
+Services_finger_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "finger" "$1"
+}
+
+Services_ftp_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "ftp" "$1"
+}
+
+Services_tftp_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "tftp" "$1"
+}
+
+Services_ntalk_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "ntalk" "$1"
+}
+
+Services_smtp_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "smtp" "$1"
+}
+
+Services_sendmail_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "sendmail" "$1"
+}
+
+Services_sshd_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "sshd" "$1"
+}
+
+Services_portmap_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "portmap" "$1"
+}
+
+Services_syslog_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "syslog" "$1"
+}
+
+Services_syslogd_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "syslog" "$1"
+}
+
+Services_named_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "named" "$1"
+}
+
+Services_nfs_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "nfs" "$1"
+}
+
+Services_nfslock_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "nfslock" "$1"
+}
+
+Services_httpd_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "httpd" "$1"
+}
+
+Services_cups_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "cups" "$1"
+}
+
+Services_iptables_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "iptables" "$1"
+}
+
+Services_gpm_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "gpm" "$1"
+}
+
+Services_xfs_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "xfs" "$1"
+}
+
+Services_ypbind_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "ypbind" "$1"
+}
+
+Services_winbind_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_regular_serv "winbind" "$1"
+}
+
+Services_ntpd_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_regular_serv "ntpd" "$1"
+}
+
+Services_xdm_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_regular_serv "xdm" "$1"
+}
+
+Services_login_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_xinetd_serv "login" "$1"
+}
+
+Services_uucp_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "uucp" "$1"
+}
+
+Services_discard_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "discard" "$1"
+}
+
+Services_imap2_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "imap2" "$1"
+}
+
+Services_pop3_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "pop3" "$1"
+}
+
+Services_shell_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "shell" "$1"
+}
+
+Services_http_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "http" "$1"
+}
+
+Services_name_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "name" "$1"
+}
+
+Services_routed_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "routed" "$1"
+}
+
+Services_snmp_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "snmp" "$1"
+}
+
+Services_timed_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "timed" "$1"
+}
+
+Services_rwho_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "rwho" "$1"
+}
+
+Services_rusersd_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "rusersd" "$1"
+}
+
+Services_rsh_RH ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  handle_xinetd_serv "rsh" "$1"
+}
+

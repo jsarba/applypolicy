@@ -1,0 +1,260 @@
+#!/usr/bin/ksh
+
+##$1 is the path
+handle_root_path()
+{
+#this little shell sed command should get the root path set in /etc/profile
+  ROOTPATH=$(${SED} -n '/"$EUID" = "0"/,/fi/{/pathmunge/H};$x;s/pathmunge *//g;$p' ${PROFILEFILE} | ${SED} -n '/^$/d; s/\t//;H; $x; $s/\n/:/g; s/ //g; s/.\(.*\)/\1/;$p')
+  if [ "${ROOTPATH}" != $1 ]; then
+    APLog "Is ${ROOTPATH:-NONEXISTENT} and should be ${1}"
+    if [ "${FIXATE}" = 1 ]; then
+    #let's clean the old pathmuges
+    ${SED}  '/"$EUID" = "0"/,/fi/{/pathmunge/d}' ${PROFILEFILE} >profile.tmp
+    
+    #theoretically, this should stack up pathmunge path in each itheration after the line that has "$EUID" = "0"
+    echo $1 | ${AWK} -F':' '{ for(i=1;i<=NF;i++) print "pathmunge "$i }' | ${SED} -e '1!G;h;$!d' |while read PATHNAME ; do
+      ${SED} "/\"\$EUID\" = \"0\"/a\\ ${PATHNAME}" profile.tmp >profile.tmp2
+      mv profile.tmp2 profile.tmp  
+    done
+    mv profile.tmp ${PROFILEFILE}
+    APLog "FIXED"
+    return
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+handle_logindefs()
+{ 
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1} *\(.*\)/\1/p" ${LOGINDEFSFILE})
+  ACTUALVAL=$(echo ${ACTUALVAL} | ${SED} "s/[[:blank:]]*//g")
+  if [ "${2}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${LOGINDEFSFILE}
+      #change or add the option      
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1}  ${2} >> ${LOGINDEFSFILE}
+      else
+        ${SED} "s/${1}.*/${1}  ${2}/" ${LOGINDEFSFILE} > logindefs.tmp
+        mv logindefs.tmp ${LOGINDEFSFILE}
+        APLog "FIXED"
+     fi 
+     return 
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+} 
+##$1 is the key
+##$2 is the value
+handle_profile()
+{
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1}=\(.*\)/\1/p" ${PROFILEFILE})
+  if [ "${2}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${PROFILEFILE}
+      #change or add the option      
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1}=${2} >> ${PROFILEFILE}
+      else
+        ${SED} "s/${1}=.*/${1}=${2}/" ${PROFILEFILE} > profilefile.tmp
+        mv profilefile.tmp ${PROFILEFILE}
+        APLog "FIXED"
+     fi 
+     return 
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+#this pam function will be severely lacking
+#due to some implementation choises this function will be able to tell if the pam module is in the
+#right place but will not be able to correct it if it isnt, furthermore, this function will not be
+#able to tell if there are more modules in the file than those specified in the standard
+#$1 file name
+#$2 module string
+handle_pam ()
+{
+	FILENAME=$1
+	VAR=$(${SED} -n "/$(echo $2 | ${SED} 's/:/\.\*/g; s/\$/\\\$/g ;s/\//\\\//g')/p" ${PAMDDIR}/${FILENAME#PAM_})
+	if [ -z "$VAR" ]; then
+		APLog "the pam string $2 is not in $1, it must be added manually"
+		return
+	fi
+	if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+   fi
+}
+
+
+UserSecurity_uidmin_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs UID_MIN "$1"
+}
+
+UserSecurity_uidmax_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs UID_MAX "$1"
+}
+
+UserSecurity_umask_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs UMASK "$1"
+}
+
+UserSecurity_gidmax_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs GID_MAX "$1"
+}
+
+UserSecurity_gidmin_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs GID_MIN "$1"
+}
+
+UserSecurity_gidmin_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs GID_MIN "$1"
+}
+
+UserSecurity_minlen_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs PASS_MIN_LEN "$1"
+}
+
+UserSecurity_maxage_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs PASS_MAX_DAYS "$1"
+}
+
+UserSecurity_minage_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs PASS_MIN_DAYS "$1"
+}
+
+
+UserSecurity_pwdwarntime_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs PASS_WARN_DAYS "$1"
+}
+
+UserSecurity_histsize_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_profile HISTSIZE "$1"
+}
+
+UserSecurity_tmout_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_profile TMOUT "$1"
+}
+
+UserSecurity_loginretries_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_logindefs FAIL_DELAY "$1"
+}
+
+UserSecurity_PATH_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_root_path "$1"
+}
+
+
+# $1 its a space sepparated list of users that should be bloqued.
+UserSecurity_blocked_RH ()
+{
+ FOUND=0
+
+ for UNAME in ${1}
+    do
+       CHECK=$(${SED} -n "/^$UNAME:"'!/p' /etc/shadow)
+       if [ -z "${CHECK}" ] ; then
+          APLog "User ${UNAME} is not locked."
+          FOUND=1
+          if [ ${FIXATE} = 1 ] ; then
+             APBackup /etc/shadow                                            
+             CHECK=$(passwd -l ${UNAME} 2>&1)
+             if [ $? -e 0 ] ; then
+                APLog "FIXED"
+             else
+                APLog "ERROR: Unable to lock user ${UNAME}: ${CHECK}"
+             fi
+          fi
+       fi
+    done
+
+ if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+     APLog "OK"
+ fi
+
+}
+
+UserSecurity_only_one_root_RH()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+
+  CHECK=$(cat /etc/passwd | ${AWK} -F: '{print $3}' | ${SED} -n '/\<0\>/p')
+
+  if [ ${CHECK} != "0" ] ; then
+     APLog "There is more than one user with UID=0. FAILED"
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  
+}
+

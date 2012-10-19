@@ -1,0 +1,31 @@
+#!/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+
+MailSecurity_NoAliases_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+ FOUND=0
+ ACTUALVAL=$(echo "$1" | ${SED} 's/"//g;s/,/ /g') 
+ for UNAME in ${ACTUALVAL}
+    do
+       CHECK=$(${SED} -n "/^$UNAME:/p" /etc/aliases)
+       if [ -n "${CHECK}" ] ; then
+          APLog "User ${UNAME} is aliased."
+          FOUND=1
+          if [ ${FIXATE} = 1 ] ; then
+             APBackup /etc/aliases
+             ${SED} "s/^$UNAME:/#$UNAME:/" /etc/aliases > /tmp/apal.tmp
+             mv -f /tmp/apal.tmp /etc/aliases
+             APLog "FIXED"
+          fi
+       fi
+    done
+
+ if [ ${LOG_OK} = 1 -a "${FOUND}" = 0 ] ; then
+     APLog "OK"
+ fi
+}
+

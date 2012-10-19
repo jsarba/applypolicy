@@ -1,0 +1,118 @@
+#!/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+CronAtPolicy_CronAllow_SOL()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${CRONALLOW}" ] ; then
+     APLog "${CRONALLOW} does not exist. FAILED"
+#     return
+  fi
+  IFS=','; for i in ${1}; do
+    if [ ! -f "${CRONALLOW}" -o -z $"(${SED} -n  "/^\<${i}\>/p" "${CRONALLOW}")" 1>&2 2>/dev/null ]; then
+       APLog "The user ${i} should be allowed to use cron and it is not."
+       WASFIXED=1
+       if [ ${FIXATE} = 1 ] ; then
+          APBackup "${CRONALLOW}"
+          echo ${i} >> "${CRONALLOW}"
+          APLog "FIXED"
+       fi
+    fi
+  done
+  if [  -z "$WASFIXED" ]; then
+     if [ ${LOG_OK} = 1 ] ; then
+         APLog "OK"
+     fi
+  fi
+    IFS=""
+}
+
+
+CronAtPolicy_CronDeny_SOL()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${CRONDENY}" ] ; then
+     APLog "${CRONDENY} does not exist. FAILED"
+#     return
+  fi
+  if [ ! -f "${CRONDENY}" -o -z "$(${SED} -n "/^\<${1}\>/p" "${CRONDENY}")" 1>&2 2>/dev/null ]; then
+     APLog "The user ${1} should not be allowed to use cron and it is."
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup "${CRONDENY}"
+        echo ${i} >> "${CRONDENY}"
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+}
+
+
+CronAtPolicy_AtAllow_SOL()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${ATALLOW}" ] ; then
+     APLog "${ATALLOW:-NONEXISTENT} does not exist. FAILED"
+#     return
+  fi
+  IFS=','; for i in ${1}; do
+     if [ ! -f "${ATALLOW}" -o -z "$(${SED} -n "/^\<${i}\>/p" "${ATALLOW}")" 1>&2 2>/dev/null ]; then
+        APLog "The user ${i} should be allowed to use at and is not."
+	WASFIXED=1
+        if [ ${FIXATE} = 1 ] ; then
+           APBackup "${ATALLOW}"
+           echo ${i} >> "${ATALLOW}"
+           APLog "FIXED"
+       fi
+     fi
+   done
+   if [  -z "$WASFIXED" ]; then
+       if [ ${LOG_OK} = 1 ] ; then
+          APLog "OK"
+       fi
+   fi
+   IFS=""
+}
+
+
+CronAtPolicy_AtDeny_SOL()
+{
+# I'm here!
+  DENUSERS=$1
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  if [ ! -f "${ATDENY}" ] ; then
+     APLog "${ATDENY:-NONEXISTENT} does not exist. FAILED"
+#     return
+  fi
+  DENUSERS="$(echo "${DENUSERS}" | ${SED} 's/\"//g')"
+  IFS=','; for i in ${DENUSERS}; do
+    if [ ! -f "${ATDENY}" -o -z "$(${SED} -n "/^\<${i}\>/p" "${ATDENY}")" 1>&2 2>/dev/null ]; then
+      APLog "The user ${i} should not be allowed to use at and it is."
+      WASFIXED=1
+      if [ ${FIXATE} = 1 ] ; then
+        APBackup "${ATDENY}"
+        echo ${i} >> "${ATDENY}"
+        APLog "FIXED"
+      fi
+    fi
+  done
+  if [  -z "$WASFIXED" ]; then
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  IFS=""
+}
+

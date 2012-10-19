@@ -1,0 +1,44 @@
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+#$1 is in the form of user:uid:guid:home:shell
+DefaultUsers_CheckUser_RH ()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+
+ UCHECK=$(echo ${1} | ${AWK} -F: '{print $1}')
+
+ UNA=$(${AWK} -F: "/^${UCHECK}:/"'{print $1}' /etc/passwd)
+ UID=$(${AWK} -F: "/^${UCHECK}:/"'{print $3}' /etc/passwd)
+ GID=$(${AWK} -F: "/^${UCHECK}:/"'{print $4}' /etc/passwd)
+ HME=$(${AWK} -F: "/^${UCHECK}:/"'{print $6}' /etc/passwd)
+ DSH=$(${AWK} -F: "/^${UCHECK}:/"'{print $7}' /etc/passwd)
+
+ CHECK=${UNA}:${UID}:${GID}:${HME}:${DSH}
+
+ if [ "${1}" != "${CHECK}" ] ; then
+    APLog "${UCHECK} has ${CHECK:-NONEXISTENT} and should be ${1}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup /etc/passwd
+      #change or add the option      
+      if [ -z "${UCHECK}" ]; then
+#        echo ${UNA}:x:${UID}:${GID}::${HME}:${DSH} >> /etc/passwd
+#What about a password on shadow file?
+        APLog "WARNING: User not added. It's recomended to manually do it."
+      else    
+        ${SED} "s/^${UNA}:.*/${UNA}:x:${UID}:${GID}::${HME}:${DSH}/" /etc/passwd > /tmp/apdg.tmp
+        mv -f /tmp/apdg.tmp /etc/passwd
+        #fix perms      
+        ${CHMOD} 444 /etc/passwd
+        APLog "FIXED"
+     fi 
+     return 
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+ 
+}

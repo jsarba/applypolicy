@@ -1,0 +1,109 @@
+#!/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+# Apply Policy Solaris
+PASSWDFILE="/etc/passwd"
+SHADOWFILE="/etc/shadow"
+CRONALLOW="/etc/cron.d/cron.allow"
+CRONDENY="/etc/cron.d/cron.deny"
+ATALLOW="/etc/cron.d/at.allow"
+ATDENY="/etc/cron.d/at.deny"
+SSHDCONF="/usr/local/etc/ssh/sshd_conf"
+MOTDFILE="/etc/motd"
+LOGINFILE="/etc/default/login"
+DEFPASSWDFILE="/etc/default/passwd"
+TELNETDFILE="/etc/default/telnetd"
+INITTABFILE="/etc/inittab"
+INETD="/etc/inetd.conf"
+SSHDCONF="/etc/ssh/sshd_config"
+SSHDLMFILE="/etc/issue.net"
+
+handle_loginfile()
+{
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1} *=\(.*\)/\1/p" ${LOGINFILE})
+  PARAM=$2
+  PARAM=${PARAM## };PARAM=${PARAM%% }
+  ACTUALVAL=${ACTUALVAL## }; ACTUALVAL=${ACTUALVAL%% }
+  if [ "${PARAM}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${LOGINFILE}
+      #change or add the option
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1}=${2} >> ${LOGINFILE}
+      else
+        ${SED} "s/${1} *=.*/${1} = ${2}/" ${LOGINFILE} > login.tmp
+        mv login.tmp ${LOGINFILE}
+        APLog "FIXED"
+     fi
+     return
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+handle_defpasswdfile()
+{
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1} *=\(.*\)/\1/p" ${DEFPASSWDFILE})
+  ACTUALVAL=${ACTUALVAL## }; ACTUALVAL=${ACTUALVAL%% }
+  PARAMS="$2"
+  PARAMS=${PARAMS## };PARAMS=${PARAMS%% }
+  if [ "${PARAMS}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${DEFPASSWDFILE}
+      #change or add the option
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1}=${PARAMS} >> ${DEFPASSWDFILE}
+      else
+        ${SED} "s/^${1} *=.*/${1} = ${PARAMS}/" ${DEFPASSWDFILE} > login.tmp
+        mv login.tmp ${DEFPASSWDFILE}
+        APLog "FIXED"
+     fi
+     return
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+handle_telnetdfile()
+{
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1} *=\(.*\)/\1/p" ${TELNETDFILE})
+  ACTUALVAL=$(echo ${ACTUALVAL} | sed "s/^ *//")
+  if [ "${2}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${TELNETDFILE} 
+      #change or add the option
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1} = ${2} >> ${TELNETDFILE}
+      else
+        ${SED} "s/${1} *=.*/${1} = ${2}/" ${TELNETDFILE} > login.tmp
+        mv login.tmp ${TELNETDFILE}
+        APLog "FIXED"
+     fi
+     return
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}
+
+
+
+#Include solaris.d
+
+if [ -d "${PREFIX}/lib/applypolicy/solaris.d" ] ; then
+   for INCSH in ${PREFIX}/lib/applypolicy/solaris.d/*
+      do
+        . ${INCSH}
+      done
+fi
+

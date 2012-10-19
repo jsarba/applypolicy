@@ -1,0 +1,40 @@
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+
+#$1 is in the form of groupname:GID:users
+DefaultGroups_CheckGroup_RH ()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+
+ #root:0:root -> root:x:0:root
+ GROUPOK=$(echo ${1} | ${SED} 's/:/:x:/')
+ GNAME=$(echo ${1} | ${AWK} -F: '{print $1}')
+ GROUPC=${1#*:}
+
+ CHECK=$(${SED} -n "/^${GNAME}:/p" /etc/group)
+
+ if [ "${GROUPOK}" != "${CHECK}" ] ; then
+    APLog "${GNAME} has ${CHECK:-NONEXISTENT} and should be ${GROUPC}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup /etc/group
+      #change or add the option      
+      if [ -z "${CHECK}" ]; then
+        echo ${GROUPOK} >> /etc/group
+      else    
+        ${SED} "s/^${GNAME}:.*/${GROUPOK}/" /etc/group > /tmp/apdg.tmp
+        mv -f /tmp/apdg.tmp /etc/group
+        #fix perms      
+        ${CHMOD} 644 /etc/group
+        APLog "FIXED"
+     fi 
+     return 
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+ 
+}

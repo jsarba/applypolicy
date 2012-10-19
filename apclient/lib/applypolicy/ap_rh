@@ -1,0 +1,40 @@
+#!/bin/ksh
+# Apply Policy Red Hat
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+
+
+APLog ${PLAT}
+
+
+LILOFILE="/etc/lilo.conf"
+GRUBFILE="/etc/grub.conf"
+LOGINDEFSFILE="/etc/login.defs"
+PROFILEFILE="/etc/profile"
+
+#Include rh.d
+
+if [ -d "${PREFIX}/lib/applypolicy/rh.d" ] ; then
+   for INCSH in ${PREFIX}/lib/applypolicy/rh.d/*
+      do
+        . ${INCSH}
+      done
+fi
+
+
+SSHDCONF="/etc/ssh/sshd_config"
+SSHDLMFILE="/etc/issue.sshd" 
+SYSCTLFILE="/etc/sysctl.conf"
+USERADDFILE="/etc/default/useradd"
+SECURETTYFILE="/etc/securetty"
+SHELLSFILE="/etc/shells"
+INITTABFILE="/etc/inittab"
+MOTDFILE="/etc/motd"
+XINETDDIR="/etc/xinetd.d"
+INETDFILE="/etc/inetd.conf" 
+LILOFILE="/etc/lilo.conf"
+GRUBFILE="/etc/grub.conf"
+LOGINDEFSFILE="/etc/login.defs"
+PROFILEFILE="/etc/profile"
+CHKCONFIG="/sbin/chkconfig"
+PAMDDIR="/etc/pam.d"

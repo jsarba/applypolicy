@@ -1,0 +1,121 @@
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+# $1 its a space sepparated list of users that should be bloqued.
+UserSecurity_blocked_SOL ()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+
+ FOUND=0
+
+ for UNAME in ${1}
+    do
+       CHECK=$(${GREP} "^$UNAME:\*LK\*" ${SHADOWFILE})
+       if [ -z "${CHECK}" ] ; then
+          APLog "User ${UNAME} is not locked."
+          FOUND=1
+          if [ ${FIXATE} = 1 ] ; then
+             APBackup ${SHADOWFILE}                                            
+             CHECK=$(passwd -l ${UNAME} 2>&1)
+             if [ $? -eq 0 ] ; then
+                APLog "FIXED"
+             else
+                APLog "ERROR: Unable to lock user ${UNAME}: ${CHECK}"
+             fi
+          fi
+       fi
+    done
+
+ if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+     APLog "OK"
+ fi
+
+}
+
+
+UserSecurity_only_one_root_SOL()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+
+  CHECK=$(cat ${PASSWDFILE} | ${AWK} -F: '{print $3}' | ${SED} -n '/\<0\>/p')
+
+  if [ ${CHECK} != "0" ] ; then
+     APLog "There is more than one user with UID=0. FAILED"
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  
+}
+
+
+UserSecurity_syslog_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_loginfile SYSLOG "$1"
+}
+
+UserSecurity_console_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_loginfile CONSOLE "$1"
+}
+
+UserSecurity_passreq_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_loginfile PASSSREQ "$1"
+}
+
+UserSecurity_umasq_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_loginfile UMASQ "$1"
+}
+
+UserSecurity_loginretries_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_loginfile RETRIES "$1"
+}
+
+
+UserSecurity_minage_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_defpasswdfile MINWEEKS "$1"
+}
+
+UserSecurity_maxage_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_defpasswdfile MAXWEEKS "$1"
+}
+
+UserSecurity_passlen_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_defpasswdfile PASSLENGTH "$1"
+}
+

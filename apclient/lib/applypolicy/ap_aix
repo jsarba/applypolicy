@@ -1,0 +1,158 @@
+#!/usr/bin/ksh
+# Apply Policy AIX
+# 
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+
+
+handle_sec()
+{
+  EXPECTEDVAL=$(echo $2 | ${SED} 's/"//g')
+  if [ "${4}" = "" ] ; then
+     SECT=default
+  else
+     SECT=${4}
+  fi
+  
+  VALOR=$(lssec -f ${3} -s ${SECT} -a "${1}" | ${AWK} -F= '{print $2}')
+  if [ "${VALOR}" != "${EXPECTEDVAL}" ] ; then
+     APLog "Is ${VALOR} and should be ${EXPECTEDVAL}"
+     DIFER=1
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup "${3}"
+        chsec -f "${3}" -s ${SECT} -a "${1}"="${EXPECTEDVAL}"
+        APLog "FIXED"
+     fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+       APLog "OK"
+    fi
+  fi
+}
+
+
+#
+# This function checks rc.tcpd for a service.
+# If the service is down and it should be up, the line which starts the
+# server should be in the file commented out.
+# $1 = Service binary file name as apears on /usr/sbin/
+# $2 = state it should be: true or false
+ #check if true, up
+handle_rctcpd()
+{
+ #scape the slashes dammit! - DOC this
+ STARTCMD="start \/usr\/sbin\/"
+ #check if true, up
+ if [ "${2}" = "true" ] ; then
+    #check if its there
+    CHECK=$(cat ${TCPIP}  | ${SED} -n "/^${STARTCMD}${1}[	 ]/p")
+    if [ -z "${CHECK}" ] ; then
+       #its not there
+       APLog "Service ${1} is down and should be up."
+       DIFER=1
+       if [ ${FIXATE} = 1 ] ; then
+          CHECK=$(cat ${TCPIP}  | ${SED} -n "/^#${STARTCMD}${1}[	 ]/p")
+          if [ -z "${CHECK}" ] ; then
+             #It should be up but there is no line refering this service in the file
+             APLog "Service ${1} is down and should be up, but there is no line to uncomment on the file."
+             APLog "FAILED"
+             return
+          fi
+          rm -f ${TEMP}
+          cat ${TCPIP} | ${SED}  -e "s/#${STARTCMD}${1}[	 ]/${STARTCMD}${1} /" > ${TEMP}
+          APBackup ${TCPIP}
+          mv -f ${TEMP} ${TCPIP}
+          APLog "FIXED"
+          return
+       fi
+    else
+       #Everyhing is fine
+       if [ ${LOG_OK} = 1 ] ; then
+          APLog "OK"
+       fi
+    fi
+ else #check if false, down
+    CHECK=$(cat ${TCPIP}  | ${SED} -n "/^${STARTCMD}${1}[	 ]/p")
+    if [ -n "${CHECK}" ] ; then
+       APLog "Service ${1} is up and should be down."
+       DIFER=1
+       if [ ${FIXATE} = 1 ] ; then
+          rm -f ${TEMP}
+          cat ${TCPIP} | ${SED}  -e "s/^${STARTCMD}${1}/#${STARTCMD}${1}/" > ${TEMP}
+          APBackup ${TCPIP}
+          mv -f ${TEMP} ${TCPIP}
+          APLog "FIXED"
+          return
+       fi
+    else #the line dosn't appear, the service is down
+       if [ ${LOG_OK} = 1 ] ; then
+          APLog "OK" ;
+       fi
+    fi
+ fi
+}
+
+
+handle_login()
+{
+ handle_sec "${1}" "${2}" "/etc/security/login.cfg" "${3}"
+}
+
+handle_user()
+{
+ handle_sec "${1}" "${2}" "/etc/security/user"
+}
+
+
+#Creates a list of all system users
+AllUsers()
+{
+# lsuser ALL | ${SED} -e 's/^#.*//g' | ${AWK} '{print $1}'
+  cat /etc/passwd | ${AWK} -F: '{print $1}'
+}
+
+
+#Creates a list of all system users
+AllGroups()
+{
+ lsgroup ALL | ${SED} -e 's/^#.*//g' | ${AWK} '{print $1}'
+#  cat /etc/groups | ${AWK} -F: '{print $1}'
+}
+
+#Creates a list with the users of $1 without the users of $2
+#Specify one user per line
+FilterUsers()
+{
+ ALLUSERS="${1}"
+ 
+ for NOTME in ${2}
+    do
+      ALLUSERS=$(echo "${ALLUSERS}" | ${SED} -e "/^${NOTME}"'$/d')
+    done
+ echo "${ALLUSERS}"
+}
+
+
+#
+# Inicializaciones
+#
+
+TEMP="/tmp/replace"
+INETD="/etc/inetd.conf"
+ITAB="/etc/inittab"
+TCPIP="/etc/rc.tcpip"
+MOTD="/etc/motd"
+ATALLOW="/var/adm/cron/at.allow"
+ATDENY="/var/adm/cron/at.deny"
+CRONALLOW="/var/adm/cron/cron.allow"
+CRONDENY="/var/adm/cron/cron.deny"
+
+
+#Include aix.d
+
+if [ -d "${PREFIX}/lib/applypolicy/aix.d" ] ; then
+   for INCSH in ${PREFIX}/lib/applypolicy/aix.d/*
+      do
+        . ${INCSH}
+      done
+fi

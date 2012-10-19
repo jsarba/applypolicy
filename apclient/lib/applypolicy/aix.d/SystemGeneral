@@ -1,0 +1,130 @@
+#!/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+SystemGeneral_LoginMessage_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login herald "${1}"
+}
+
+SystemGeneral_LoginDelay_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login logindelay "${1}"
+}
+
+SystemGeneral_MOTD_AIX()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+
+
+ if [ -f "${MOTD}" ] ; then
+     CHECK=$(cat "${MOTD}")
+ fi
+ 
+ if [ "${CHECK}" != "${1}" ] ; then
+     APLog "The MOTD file contains ${CHECK:-NONEXISTENT} and should be ${1}."
+     if [ ${FIXATE} = 1 ] ; then
+        APBackup "${MOTD}"
+        echo "${1}" > "${MOTD}"
+        APLog "FIXED"
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+}
+
+SystemGeneral_LoginDisable_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login logindisable "${1}"
+}
+
+SystemGeneral_LoginReenable_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login loginreenable "${1}"
+}
+
+SystemGeneral_LoginTimes_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login logintimes "${1}"
+}
+
+
+SystemGeneral_SAK_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login sak_enabled "${1}"
+}
+
+SystemGeneral_AllowedShells_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login shells "${1}" usw
+}
+
+SystemGeneral_MaxLogins_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login maxlogins "${1}" usw
+}
+
+
+SystemGeneral_UserTrap_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_user trap "${1}"
+}
+
+
+SystemGeneral_UserTimeout_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_login logintimeout "${1}" usw
+}
+
+
+SystemGeneral_UserReadonly_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+ handle_user readonly "${1}"
+}
+

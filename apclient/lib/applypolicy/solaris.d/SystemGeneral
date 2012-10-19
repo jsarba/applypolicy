@@ -1,0 +1,48 @@
+#!/usr/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+SystemGeneral_MotdMessage_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi  
+  ACTUALVAL="$(cat ${MOTDFILE})"
+  if [[ "$1" != "${ACTUALVAL}" ]]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${1}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${MOTDFILE}
+      echo $1 > ${MOTDFILE}
+      APLog FIXED
+      return
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+  fi
+
+}
+
+
+SystemGeneral_UserTimeout_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_loginfile TIMEOUT "$1"
+}
+
+SystemGeneral_LoginMessage_SOL()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_telnetdfile BANNER "$1"
+}
+
+
+SystemGeneral_UserTrap_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  handle_loginfile TRAP "$1"
+}

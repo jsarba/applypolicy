@@ -1,0 +1,299 @@
+#!/bin/ksh
+#NFS Server Security
+NFSPolicy_commandline_AIX()
+{
+ # I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR=$(cat ${ITAB} | sed -n -e 's/.*\<nfsd\>\(.*\)/\1/p')
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "${VALOR}" != "${1}" ] ; then
+     APLog "NFS Server command line is ${VALOR:-NONEXISTENT} and should be ${1}."
+     if [ ${FIXATE} = 1 ] ; then
+        rm -f ${TEMP}
+        cat ${ITAB} | ${SED}  -e  "s/\(.*\<nfsd\>\)\(.*\)/\1 ${1}/" > ${TEMP}
+        APBackup ${ITAB}
+        mv -f ${TEMP} ${ITAB}
+        APLog "FIXED"
+        return
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  
+}
+
+
+NFSPolicy_automountd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -s /etc/auto_master ];  then
+	APLog "the Automounter is on and should be off"
+	if [ ${FIXATE} = 1 ] ; then
+	  APBackup "/etc/auto_master"
+	  mv /etc/auto_master /etc/auto_master.scode
+	  APLog "fixed"
+	fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ !  -s /etc/auto_master ];  then
+        APLog "the Automounter is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+	  if [ -s /etc/auto_master.scode ]; then
+            mv /etc/auto_master.scode /etc/auto_master
+            APLog "fixed"
+	  else
+            APLog "the automounter should be on but there is no automounter map"
+	    APLog "you need to create a /etc/auto_master"
+	  fi
+        fi
+    fi  
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+
+
+NFSPolicy_biod_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -x /usr/sbin/biod ];  then
+        APLog "biod is on and should be off"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod -x /usr/sbin/biod 
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ ! -x /usr/sbin/biod ];  then
+        APLog "biod is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod +x /usr/sbin/biod  
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+
+NFSPolicy_keyserv_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -x /usr/sbin/keyserv ];  then
+        APLog "keyserv is on and should be off"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod -x /usr/sbin/keyserv  
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ ! -x /usr/sbin/keyserv ];  then
+        APLog "keyserv is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod +x /usr/sbin/keyserv  
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+
+NFSPolicy_nfsd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -x /usr/sbin/nfsd ];  then
+        APLog "nfsd is on and should be off"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod -x /usr/sbin/nfsd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ ! -x /usr/sbin/nfsd ];  then
+        APLog "nfsd is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod +x /usr/sbin/nfsd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+
+NFSPolicy_rpc_lockd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+    VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -x /usr/sbin/rpc.lockd ];  then
+        APLog "rpc.lockd is on and should be off"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod -x /usr/sbin/rpc.lockd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ ! -x /usr/sbin/rpc.lockd ];  then
+        APLog "rpc.lockd is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod +x /usr/sbin/rpc.lockd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+
+NFSPolicy_rpc_mountd_AIX()
+{
+# I'm here!
+APLog "rpc.mount is part of the nfsd service"
+}
+
+NFSPolicy_rpc_statd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -x /usr/sbin/rpc.statd ];  then
+        APLog "rpc.statd is on and should be off"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod -x /usr/sbin/rpc.statd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ ! -x /usr/sbin/rpc.statd ];  then
+        APLog "rpc.statd is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod +x /usr/sbin/rpc.statd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+
+NFSPolicy_rpc_yppasswdd_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -x /usr/lib/netsvc/yp/rpc.yppasswdd ];  then
+        APLog "rpc.yppasswdd is on and should be off"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod -x /usr/lib/netsvc/yp/rpc.yppasswdd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ ! -x /usr/lib/netsvc/yp/rpc.yppasswdd ];  then
+        APLog "rpc.yppasswdd is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod +x /usr/lib/netsvc/yp/rpc.yppasswdd
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+
+NFSPolicy_ypupdated_AIX()
+{
+# I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR="$1"
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "$VALOR" = "false" ]; then
+    if [ -x /usr/lib/netsvc/yp/rpc.ypupdated ];  then
+        APLog "rpc.ypupdated is on and should be off"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod -x /usr/lib/netsvc/yp/rpc.ypupdated
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ "$VALOR" = "true" ]; then
+    if [ ! -x /usr/lib/netsvc/yp/rpc.ypupdated ];  then
+        APLog "rpc.ypupdated is off and should be on"
+        if [ ${FIXATE} = 1 ] ; then
+          chmod +x /usr/lib/netsvc/yp/rpc.ypupdated
+          APLog "fixed"
+        fi
+    fi
+  fi
+  if [ ${LOG_OK} = 1 ] ; then
+    APLog "OK"
+  fi
+}
+

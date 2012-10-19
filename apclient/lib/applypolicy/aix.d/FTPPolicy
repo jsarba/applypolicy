@@ -1,0 +1,63 @@
+#!/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+#
+#${1} contains the command line for the ftp line in inetd.conf wich starts
+#the ftp server
+#FTPServer Security
+FTPPolicy_CommandLine_AIX()
+{
+ # I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  VALOR=$(cat ${INETD} | sed -n -e 's/.*\<ftpd\>\(.*\)/\1/p')
+  VALOR=${VALOR## };
+  VALOR=${VALOR%% };
+  if [ "${VALOR}" != "${1}" ] ; then
+     APLog "FTP Server command line is ${VALOR:-NONEXISTENT} and should be ${1}."
+     if [ ${FIXATE} = 1 ] ; then
+        rm -f ${TEMP}
+        cat ${INETD} | ${SED}  -e  "s/\(.*\<ftpd\>\)\(.*\)/\1 ${1}/" > ${TEMP}
+        APBackup ${INETD}
+        mv -f ${TEMP} ${INETD}
+        APLog "FIXED"
+        return
+     fi
+  else
+     if [ ${LOG_OK} = 1 ] ; then
+        APLog "OK"
+     fi
+  fi
+  
+}
+
+FTPPolicy_ftpusers_AIX()
+{
+ # I'm here!
+  if [ ${TESTFLAG} = 1 ] ; then
+    return
+  fi
+  
+ USUARIOS=$(AllUsers)
+
+ FOUND=0
+ 
+ for USUARIO in ${USUARIOS}
+    do
+      CHECK=$(${GREP} -e "'^${USUARIO}"'$'"'" /etc/ftpusers)
+      if [ -z "${CHECK}" ] ; then
+         FOUND=1
+         APLog "${USUARIO:-NONEXISTENT} is not on /etc/ftpusers."
+         if [ ${FIXATE} = 1 ] ; then
+            echo ${USUARIO} >> /etc/ftpusers
+            APLog "FIXED"
+         fi
+      fi
+    done
+    
+ if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+    APLog "OK"
+ fi
+  
+}
+

@@ -1,0 +1,79 @@
+#!/usr/bin/ksh
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+##handle_useradd
+##$1 option name
+##$2 expected value
+##extracts the real value of $1, logs and possibly change it
+handle_useradd()
+{ 
+  ACTUALVAL=$(${SED} -n "/^ *#/d; /^$/d; s/${1} *=\(.*\)/\1/p" ${USERADDFILE})
+  if [ "${2}" != "${ACTUALVAL}" ]; then
+    APLog "Is ${ACTUALVAL:-NONEXISTENT} and should be ${2}"
+    if [ ${FIXATE} = 1 ] ; then
+      APBackup ${USERADDFILE}
+      #change or add the option      
+      if [ -z "${ACTUALVAL}" ]; then
+        echo ${1} = ${2} >> ${USERADDFILE}
+      else    
+        ${SED} "s/${1} *=.*/${1} = ${2}/" ${USERADDFILE} > useraddconf.tmp
+        mv useraddconf.tmp ${USERADDFILE}
+        #fix perms      
+        ${CHMOD} 600 ${USERADDFILE}
+        APLog "FIXED"
+     fi 
+     return 
+    fi
+  else
+    if [ ${LOG_OK} = 1 ] ; then
+      APLog "OK"
+    fi
+  fi
+}  
+
+NewUsers_Group_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_useradd GROUP "$1"
+}
+
+NewUsers_Home_RH ()
+{
+if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_useradd HOME "$1"
+}
+
+NewUsers_Inactive_RH ()
+{
+if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_useradd INACTIVE "$1"
+}
+
+NewUsers_Expire_RH ()
+{
+if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_useradd EXPIRE "$1"
+}
+
+NewUsers_Skel_RH ()
+{
+if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_useradd SKEL "$1"
+}
+
+NewUsers_UMask_RH ()
+{
+if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ handle_useradd UMASK "$1"
+}

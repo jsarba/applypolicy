@@ -1,0 +1,128 @@
+#!/bin/ksh
+
+
+get_audit_class()
+{
+  cat /etc/security/audit/config | ${GREP} -e "^[ 	]*${1} = " | ${SED} -e 's/.*=//g' -e 's/^ *//g' -e 's/ *$//g'
+}
+
+set_audit_class()
+{
+  rm -f /tmp/audit_config.tmp > /dev/null
+  if [ -n "$($SED -n '/^classes:$/,/^$/p' /etc/security/audit/config | $SED -n "/$1/p")" ]; then
+    $SED  "s/\([    ]*${1} =\).*/\1 ${2}/" /etc/security/audit/config > /tmp/audit_config.tmp
+    #cat /etc/security/audit/config | ${SED} -e "s/^\([    ]*${1} = \).*/\1${2}/g" > /tmp/audit_config.tmp
+  else
+    $SED '/^classes:/a\
+	replace' /etc/security/audit/config | $SED "s/replace/$1 = $2/" > /tmp/audit_config.tmp
+  fi
+  #replace this way to preserve attributes of the file
+  cat /tmp/audit_config.tmp > /etc/security/audit/config
+}
+
+
+get_audit_user()
+{
+#lsuser -a auditclasses ${1} | ${SED} 's/.*=\(.*\)/\1/p'
+
+  cat /etc/security/audit/config | ${SED} -n '/users:/,/^[^ 	]/p' | ${SED} -e '1d' | ${GREP} -e "^[ 	]*${1} = " | ${SED} -e 's/.*=//g' -e 's/^ *//g' -e 's/ *$//g'
+}
+
+set_audit_user()
+{
+chuser auditclasses="${2}" "${1}"
+}
+
+
+AuditPolicy_classes_AIX()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+ FOUND=0
+ CLIST=$(echo ${1} | ${SED} -e 's/ *//g' -e 's/;/ /g')
+
+ for CONF in ${CLIST}
+    do
+      if [ -z "${CONF}" ] ; then
+         continue;
+      fi
+      CLASSES=$(echo ${CONF} | ${SED} -e 's/\(.*\):.*/\1/g' -e 's/,/ /g')
+      VALUE=$(echo ${CONF} | ${SED} -e 's/.*:\(.*\)/\1/g')
+      for CLASS in ${CLASSES}
+         do
+           CHECK=$(get_audit_class ${CLASS})
+           CHECK=${CHECK%% };CHECK=${CHECK## }
+           if [ "${CHECK}" != "${VALUE}" ] ; then
+              FOUND=1
+              APLog "The class ${CLASS} is ${CHECK:-NONEXISTENT} and should be ${VALUE}."
+              if [ ${FIXATE} = 1 ] ; then
+                 APBackup /etc/security/audit/config
+                 set_audit_class ${CLASS} ${VALUE}
+                 APLog "FIXED"
+              fi
+           fi
+         done
+    done
+
+ if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+    APLog "OK"
+ fi
+}
+
+
+#adms  = bin sys adm uucp mail security cron audit shutdown : ; root
+AuditPolicy_users_AIX()
+{
+ if [ ${TESTFLAG} = 1 ] ; then
+    return
+ fi
+
+ FOUND=0
+ #Change ; to new lines para separar to separate in lines each group of
+ #groups and it's characeristic value (eigenvalue? :))
+ ULIST=$(echo ${1} | ${SED} -e 's/ *//g' -e 's/;/ /g')
+
+ for CONF in ${ULIST}
+    do
+      if [ -z "${CONF}" ] ; then
+         continue;
+      fi
+#if there are no listed groups, is the default value, applied for all users
+#except the previusly listed
+      echo ${CONF} | ${GREP} : > /dev/null
+      if [ $? -ne 0 ] ; then
+      #default value
+         USERS=$(AllUsers)
+         USERS=$(FilterUsers "${USERS}" "${ALL_LISTED}" )
+         VALUE=${CONF}
+      else
+         USERS=$(echo ${CONF} | ${SED} -e 's/\(.*\):.*/\1/g')
+         USERS=$(echo ${USERS} | ${SED} -e 's/,/ /g')
+         ALL_LISTED="${ALL_LISTED} ${USERS}"
+         VALUE=$(echo ${CONF} | ${SED} -e 's/.*:\(.*\)/\1/g')
+      fi
+      for USER in ${USERS}
+         do
+           CHECK=$(get_audit_user ${USER} | ${SED} -e 's/.*=//g')
+           CHECK=${CHECK%% };CHECK=${CHECK## }
+           if [ "${CHECK}" != "${VALUE}" ] ; then
+              FOUND=1
+              APLog "The user ${USER} has ${CHECK:-NONEXISTENT} and should be ${VALUE}."
+              if [ ${FIXATE} = 1 ] ; then
+                  APBackup /etc/security/audit/config
+                  RESULT=$(set_audit_user ${USER} ${VALUE})
+                  APLog "FIXED"
+              fi
+           fi
+         done
+    done
+
+ if [ ${LOG_OK} = 1 -a ${FOUND} = 0 ] ; then
+    APLog "OK"
+ fi
+
+
+}
+
+

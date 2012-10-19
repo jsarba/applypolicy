@@ -1,0 +1,158 @@
+# Apply Policy Copyright (C) 2006 Shellcode.com.ar
+##section SERVICES
+##we must include handle_inetd() from aix since most services in the services section 
+##are started via inetd
+
+##sysvserv_handle will handle sysv services for Solaris
+##it should also be fairly portable to other sysv compliant oss
+##$1 is the service to check for
+##$2 the state it should be in
+sysvserv_handle ()
+{
+	RLEVEL=$(${SED} -n 's/is:\([0-9]\):initdefault./\1/p' ${INITTABFILE})
+	for SERV in $(ls /etc/rc[1-${RLEVEL}].d | sed -n 's/^S[0-9]\{1,3\}\(.*\)/\1/p'); do 
+		if [ $SERV = $1 ]; then
+			if [ $2 = "false" ]; then
+				APLog "Service $SERV should be disabled and is not"
+				if [ $FIXATE = 1 ]; then
+					for FILE in $(find /etc/rc[1-${RLEVEL}]* | sed -n "/[KS][0-9]\{1,3\}${SERV}\$/p"); do
+						rm $FILE
+					done
+					APLog "FIXED"
+					return
+				fi
+			else #service is enabled and should be
+				if [ ${LOG_OK} = 1 ] ; then
+					APLog "OK"
+    				fi
+				return
+			fi
+		fi
+	 done
+	#being here means that the service is not being started
+	if [ $2 = "true" ]; then
+		APLog "service $1 is disabled and should not"
+		APLog "you must manually correct the problem, read README in /etc/init.d"
+		return
+	fi	
+	#being here means the service is disabled and should be disabled
+	if [ ${LOG_OK} = 1 ] ; then
+		APLog "OK"
+        fi
+
+}
+
+Services_ssh_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi   
+  sysvserv_handle "sshd" "$1"
+}
+
+
+Services_spray_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "sprayd\/1" "$1"
+}
+
+
+Services_rlogin_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "login" "$1"
+}
+
+Services_uucp_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "uucp" "$1"
+} 
+
+Services_systat_SOL ()
+{       
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "systat" "$1"
+}   
+
+Services_systat_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "systat" "$1"
+}   
+
+Services_ftp_SOL ()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "ftp" "$1"
+}   
+
+Services_finger_SOL ()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "finger" "$1"
+}   
+
+Services_tftp_SOL ()
+{
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "tftp" "$1"
+}
+
+Services_netstat_SOL ()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "netstat" "$1"
+}   
+
+Services_telnet_SOL ()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "telnet" "$1"
+}   
+
+Services_rexd_SOL ()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "rexd\/1" "$1"
+}   
+
+Services_perfmeter_SOL ()
+{ 
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "rstatd\/2\-4" "$1"
+}   
+
+Services_rup_SOL ()
+{ 
+  #rup and perfmeter are really rstatd
+  if [ ${TESTFLAG} = 1 ]; then
+    return
+  fi
+  handle_inetd "rstatd\/2\-4" "$1"
+}   

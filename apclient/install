@@ -1,0 +1,91 @@
+#!/bin/ksh
+#
+# Apply Policy Installation script v0.0.1
+# (R) 2012 Shellcode SRL
+#
+# APCLIENT installation
+
+VER="1.0"
+
+echo
+cat COPYRIGHT
+echo 
+echo 
+echo "If you continue you accept the terms of the LICENSE file."
+echo "Press ENTER to continue or CTRL+C to end."
+read linea
+
+if [ $(id | sed -e 's/uid=\(.[0-9]*\).*/\1/') -ne 0 ] ; then
+   echo "You need to be root to install and run this."
+   exit 1
+fi
+
+linea=""
+while [ -z "${linea}" ]
+do
+  echo "Where do you want to install Apply Policy? (ie:/opt/shellcode/applypolicy): "
+  read linea
+  linea=${linea:-/opt/shellcode/applypolicy}
+  mkdir -p ${linea}
+  if [ ! -d "${linea}" ] ; then
+     echo "Path does not exist: ${linea}"
+     linea=""
+  fi
+done
+
+prefix=${linea}
+linea=""
+
+while [ -z "${linea}" ]
+do
+  echo "What is the service user login name for Apply Policy: "
+  read linea
+  if [ -z "${linea}" ] ; then
+     continue
+  fi
+  APHOME=`cat /etc/passwd | sed -n  "/^${linea}/p" | awk -F: '{print $6}'`
+  if [ ! -d "${APHOME}" ] ; then
+     APHOME=""
+     linea=""
+     echo "The user doesn\'t exist. You must create it first."
+  fi
+done
+
+if [ ! -d "${APHOME}/.ssh" ]; then
+ echo "${APHOME}/.ssh does not exist, creating..."
+ mkdir "${APHOME}/.ssh"
+fi
+
+tmpusr="${linea}"
+chown ${tmpusr} "${APHOME}/.ssh"
+chmod 700 "${APHOME}/.ssh"
+
+rm applypolicy.tar 2>/dev/null
+tar cf applypolicy.tar bin doc var lib
+mv applypolicy.tar ${prefix}
+cd ${prefix}
+tar xf applypolicy.tar
+
+if [ "$?" != "0" ] ; then
+   echo "There was a problem uncompressing applypolicy."
+   echo "Terminating..."
+   exit 1
+fi
+
+cat bin/applypolicy | sed -e "s@^PREFIX.*@PREFIX=\"${prefix}\"@1" >bin/applypolicy.1
+cat bin/applypolicy.1 | sed -e "s@^\<USER\>.*@USER=\"${tmpusr}\"@1" >bin/applypolicy.2
+cat bin/applypolicy.2 | sed -e "s@^USERHOME.*@USERHOME=\"${APHOME}\"@1" >bin/applypolicy
+
+rm -f applypolicy.tar
+rm -f bin/applypolicy.1 bin/applypolicy.2
+chmod +x bin/applypolicy
+chown -R ${tmpusr}:0 ${prefix}
+cd -  > /dev/null
+
+if [ ! -f "${APHOME}/.ssh/authorized_keys" ] ; then
+   echo "There is not public key on ${APHOME}/.ssh/authorized_keys."
+   echo "Remember to configure it if you intend to use Apply Policy Server."
+fi
+
+echo "All done."
+echo "(R) 2012 Shellcode S.R.L."
