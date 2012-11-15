@@ -1,0 +1,7 @@
+# Apply Policy Server - List of servers
+#
+# User |  Server              |  Port
+
+apsrv   server.mynetwork        22
+
+#end

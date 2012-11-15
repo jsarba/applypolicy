@@ -1,0 +1,320 @@
+#!/bin/ksh
+#
+# version=1.6.0
+#
+# Apply Policy Server $version
+#
+# Read the COPYRIGHT file for the full copyright notice.
+#
+
+#Config
+
+PREFIX="/tmp/apserver"
+ 
+CFG_FILE="${PREFIX}/etc/apserver/ap_clients"
+LOG_FILE="${PREFIX}/var/log/apserver/apserver.log"
+POLICIES="${PREFIX}/var/lib/apserver/policies"
+USER=""
+SERVER=""
+PORT=""
+SSHRUN=""
+PLAT=""
+VER=""
+IDENTITY="${PREFIX}/etc/apserver/private_dsa"
+DATE=$(which date)
+
+#Programs
+SED=$(which sed)
+AWK=$(which awk)
+GREP=$(which grep)
+
+###
+# Funciones
+###
+
+Log()
+{
+ if [ "${STD_LOG}" = "1" ] ; then
+    echo ${1}
+ fi
+ echo ${1} >> "${LOG_FILE}"
+}
+
+
+SED="$(which sed)"
+AWK="$(which awk)"
+GREP="$(which grep)"
+##patcher ()
+##$1 the file to patch
+##$2 the patch file
+patcher ()
+{
+exec < $2
+#open the patch file for reading
+while true ; do
+   read LINE
+   if [ "$?" -ne 0 ]; then
+      break; #this is eof
+   fi;
+   LINE="$(echo $LINE | ${SED} 's/^[ \t]*//;s/^#.*//;/^$/d' )" #clean the coments and garbage
+   if [ -z "$LINE" ]; then
+      continue
+   fi
+   TOKEN="$(echo $LINE | ${SED} 's/ =.*//')"
+   if [ "$TOKEN" = "Section" ]; then
+      SECNAME=$(echo $LINE | ${SED} 's/.*= //')
+      if [ "${SECNAME}" = "IPTables" ] ; then
+      	echo delsection "$1" "${SECNAME}" 
+      fi
+      if [ -z "$( ${SED} -n "/Section = \<${SECNAME}\>/p" $1 )" ]; then
+         #the section is not in the file to patch, add it
+         addsection $1 $2 "$SECNAME";
+         #read till we get to the end of the section
+         while true ; do
+            read LINE
+            if [ "$?" -ne 0 ]; then
+               break; #this is eof
+            fi;
+            LINE=$(echo ${LINE## })
+            LINE=$(echo ${LINE%% })
+            if [ "${LINE}" = "EndSection" ]; then
+               break;
+            fi
+            if [ -z "$LINE" ]; then
+               continue
+            fi
+         done
+      fi #done with adding the section
+   else #the section does exist, read each item till we get to the section end
+        #parse the arguments and call update section with each read
+      while true ; do
+         if [ "$?" -ne 0 ]; then
+               break; #this is eof
+            fi;
+            if [ "${LINE}" = "EndSection" ]; then
+               break;
+            fi
+            if [ -z "$LINE" ]; then
+               read LINE
+               continue
+            fi
+            updatesection $1 "${SECNAME}" "${LINE}"
+            read LINE
+         done
+   fi
+done
+}
+
+##delsection ()
+##$1 the file to patch
+##$2 the section
+delsection ()
+{
+	${GREP} "Section = $2" $1 2>/dev/null 1>&2
+	if [ "$?" -eq 0 ] ; then
+	 ${SED} "/Section = \<$2\>/,/EndSection/d" $1 > file.bkp.new
+	 mv file.bkp.new $1
+	fi
+}
+
+##addsection ()
+##$1 the file to patch
+##$2 the patch file
+##$3 section
+addsection ()
+{
+ #Insert a new line
+ echo >> $1
+        ${SED} -n "/Section = $3/,/EndSection/{
+p
+}" $2 >> $1
+
+}
+##updatesection
+#$1 the file to patch
+#$2 the section
+#$3 the key=value pair
+updatesection ()
+{
+        LINE="$3"
+        KEY="$(echo ${LINE%%=*})"
+	KEY=$(echo $KEY | $SED  's/\//\\\//g')
+        DATA="$(echo ${LINE##*=})"
+	DATA=$(echo $DATA | $SED 's/\//\\\//g')
+        ISTHERE="$(${SED} -n "/Section = \<$2\>/,/EndSection/{
+/\<$KEY\> =/p
+}" $1)"
+
+        if [ ! -z "$ISTHERE" ]; then
+        ${SED} "/Section = \<$2\>/,/EndSection/{
+s/\\<$KEY\> =.*/$KEY = $DATA/
+}" $1 > file.bkp.new
+        else
+                ${SED} "/Section = \<$2\>/ a\\
+        $KEY = $DATA" $1 > file.bkp.new
+        fi
+        mv file.bkp.new $1
+}
+
+#$1 file to patch
+#$2 dir with patches
+patchdef()
+{
+        for file in $(ls "$2"/*.def 2>/dev/null) 
+        do
+        	Log "patching with ${file} from $2"        
+		patcher $1 "${file}"
+        done
+}
+
+
+Remote_Detect_PLAT()
+{
+ #DEFINES 
+ HNAME=$(${SSHRUN} "uname -n")
+ OS=$(${SSHRUN} "uname -a" | ${AWK} {'print $1'})
+ HW=$(${SSHRUN} "uname -m")
+ 
+ if [ "${OS}" = "SunOS" ] ; then
+#     echo "SunOS Detectado"
+#     ${SSHRUN} "cat /etc/release  2> /dev/null"
+     PLAT="solaris"
+     VER=$(${SSHRUN} uname -r)
+     Log "Detected: ${PLAT} - ${VER}"
+     return
+ elif [ "${OS}" = "AIX" ] ; then
+#     echo "AIX Detectado"
+#     ${SSHRUN} "cat /etc/release  2> /dev/null"
+     PLAT="aix"
+     VER=$(${SSHRUN} oslevel)
+     Log "Detected: ${PLAT} - ${VER}"
+     return
+ elif [ "${OS}" = "Linux" ]; then
+     ${SSHRUN} "test -f /etc/redhat-release"
+     if [ $? -eq 0 ]; then
+       PLAT=$(${SSHRUN} "cat /etc/redhat-release " | sed -e 's/[[:blank:]][Ll][Ii][Nn][Uu][Xx][[:blank:]]/ /g' -e 's/\(.*\)[[:blank:]]release.*/\1/' -e 's/[[:blank:]]//g' -e 's/\(.*\)../\1/')
+	if [ $PLAT = "RedHatEnterprise" ] || [ $PLAT = "RedHatEnterpriseClie" ] ; then
+	       PLAT="redhat"
+	fi
+       VER=$(${SSHRUN} "cat /etc/redhat-release" | sed 's/.*release[[:blank:]]*\([[:digit:]][[:graph:]]*\).*/\1/')
+       Log "Detected: ${PLAT} - ${VER}"
+       return
+     fi
+     ${SSHRUN} "test -f /etc/debian_version"
+     if [ "$?" -eq "0" ]; then
+       PLAT="debian"
+       VER=$(${SSHRUN} "cat /etc/debian_version")
+       Log "Detected: ${PLAT} - ${VER}"
+       return
+     fi
+     Log "Distribucion Linux no soportada."
+ fi
+}
+
+Is_Up_Client()
+{
+ Log "Trying ${USER}@${SERVER}:${PORT}..."
+ #Trata de ejecutar true.
+ ${SSHRUN} "true 1>&2 2> /dev/null"
+ return $?
+}
+
+
+Update_client()
+{
+ #Clear temp file. It should not happen....
+ if [ -f /tmp/policy.def ] ; then
+    rm -f /tmp/policy.def
+ fi
+ touch /tmp/policy.def
+ patchdef /tmp/policy.def "${POLICIES}/"
+ 
+ if [ -d "${POLICIES}/" ] ; then
+    patchdef /tmp/policy.def "${POLICIES}/"
+ else
+    Log "No policies found in ${POLICIES}"
+ fi
+ if [ -d "${POLICIES}/${PLAT}/" ] ; then
+    patchdef /tmp/policy.def "${POLICIES}/${PLAT}/"
+ else  
+    Log "No policies found in ${POLICIES}/${PLAT}"
+ fi
+
+ if [ -d "${POLICIES}/${PLAT}/${VER}" ] ; then
+    patchdef /tmp/policy.def "${POLICIES}/${PLAT}/${VER}"
+ else
+    Log "No policies found in ${POLICIES}/${PLAT}/${VER}"
+ fi
+
+ if [ -d "${POLICIES}/${PLAT}/${VER}/${SERVER}" ] ; then
+    patchdef /tmp/policy.def "${POLICIES}/${PLAT}/${VER}/${SERVER}/"
+ else
+    Log "No custom policies found in ${POLICIES}/${PLAT}/${VER}/${SERVER}/"
+ fi
+
+ if [ ! -f /tmp/policy.def ] ; then
+   Log "Error reading temporary policy definition. Aborting update."
+   return
+ fi
+ scp -i ${IDENTITY} -P ${PORT} /tmp/policy.def ${USER}@${SERVER}:update.def
+ rm -f /tmp/policy.def
+}
+
+
+#
+# MAIN
+#
+
+ Log "[*] Apply Policy 1.0 started `${DATE}`"
+ if [ ! -f "${CFG_FILE}" ] ; then
+    Log "Config file ${CFG_FILE} dosn't exist."
+    exit
+ fi
+
+ #Abro el archivo en el file descriptor 3
+ exec 3<"${CFG_FILE}"
+ 
+ #Leer del fd 3
+ while read  <&3 linea
+   do
+     linea=$(echo "${linea}" |  ${SED} "s/^[ \t]//" | ${GREP} -v "^#")
+
+     if [ "${linea}" = "" ] ; then
+        continue;
+     fi
+     # user server port
+     USER=$(echo ${linea} | ${AWK} '{print $1}')
+     USER=${USER## }; USER=${USER%% };
+     SERVER=$(echo ${linea} | ${AWK} '{print $2}')
+     SERVER=${SERVER## }; SERVER=${SERVER%% };
+     PORT=$(echo ${linea} | ${AWK} '{print $3}')
+     PORT=${PORT## }; PORT=${PORT%% };
+     #command line para correr algo con ssh
+     SSHRUN="ssh -i ${IDENTITY} -p ${PORT} $USER@${SERVER}"
+
+     #verifica si existe conexion con el cliente
+     Is_Up_Client
+
+     if [ $? != 0 ] ; then
+        Log "Couldn't connect to ${USER}@${SERVER}:${PORT}"
+        continue;
+     fi
+
+     #detectar sistema operativo y version del cliente
+     Remote_Detect_PLAT
+
+     if [ "${PLAT}" = "" ] ; then
+        Log "Couldn't detect remote OS at ${USER}@${SERVER}:${PORT}"
+        continue;
+     fi
+
+     #Actualizar politicas de definiciones del cliente
+     Update_client
+     
+   done
+
+ Log "[*] All done at `${DATE}`"
+
+ #Cerrar el fd
+ exec 3>&-
+
