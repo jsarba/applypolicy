@@ -129,7 +129,7 @@ UserSecurity_SYSTEM_AIX()
 
 
 
-UserSecurity_locked_AIX()
+UserSecurity_blocked_AIX()
 {
   if [ ${TESTFLAG} = 1 ] ; then
      return

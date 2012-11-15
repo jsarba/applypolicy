@@ -276,7 +276,7 @@ SSHPolicy_LoginMessage_RH()
   ssh_handle_LoginMessage $1
 }
 
-
+# If you wan't to add new feature!
 SSHPolicy__RH()
 {
   if [ ${TESTFLAG} = 1 ] ; then
