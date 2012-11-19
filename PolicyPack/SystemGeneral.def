@@ -1,0 +1,20 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy General Settings
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# System Values
+#
+
+Section = SystemGeneral
+		# This settings here, just applied for solaris/aix systems
+        UserTrap = 1 2 3
+        UserTimeout = 900
+		# 
+EndSection
+

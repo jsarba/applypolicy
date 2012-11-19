@@ -1,0 +1,34 @@
+#System Services launched by inetd or inittab
+Section = Services
+        bootps = false
+        chargen = false
+        comsat = false
+        daytime = false
+        discard = false
+        echo = false
+        exec = false
+        imap2 = false
+        klogin = false
+        kshell = false
+        login = false
+        ntalk = false
+        pop3 = false
+        rusersd = false
+        shell = false
+        talk = false
+        time = false
+        uucp = false
+        http = false
+        nfs = false
+        xdm = false
+        name = false
+        portmap = true
+        routed = false
+        rwho = false
+        sendmail = false
+        snmp = false
+        syslogd = true
+        timed = false
+        ntpd = false
+        rsh = false
+EndSection

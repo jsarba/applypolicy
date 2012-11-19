@@ -1,0 +1,19 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy General Settings
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# System Services
+#
+
+Section = Services
+        ftp = false
+        finger = false
+        tftp = false
+        telnet = false
+EndSection

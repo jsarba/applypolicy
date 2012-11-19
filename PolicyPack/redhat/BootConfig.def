@@ -1,0 +1,8 @@
+#
+# Boot config (lilo/grub)
+#
+
+Section = BootConfig
+        password=p4ssw0rd
+        restricted =
+EndSection

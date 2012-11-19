@@ -1,0 +1,21 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy General Settings
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# User Policy
+#
+
+Section = UserSecurity
+        umask = 027
+        loginretries = 4
+        minage = 0
+        maxage = 63
+		only_one_root = true
+		blocked = daemon bin adm uucp nobody
+EndSection

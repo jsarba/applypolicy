@@ -1,0 +1,21 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on FEDORA
+#
+#
+#
+# Warning!: Case Sensitive
+# Remember to use "" in all text values
+#
+
+
+#
+# System Values
+#
+
+Section = SystemGeneral
+        MotdMessage = "Recuerde cerrar la sesión una vez finalizada sus actividades"
+        CTRLALTDEL = disabled
+        SecureTTYs = console,vc/1,vc/2,vc/3,vc/4,vc/5,vc/6,vc/7,vc/8,vc/9,vc/10,vc/11,tty1,tty2,tty3,tty4,tty5,tty6,tty7,tty8,tty9,tty10,tty11,ttyS0
+        AllowedShells = /bin/bash,/bin/sh,/bin/bash,/sbin/nologin
+EndSection

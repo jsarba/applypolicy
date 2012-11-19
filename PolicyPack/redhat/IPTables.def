@@ -1,0 +1,20 @@
+#It checks the system configured rules and the actually running rules
+#It uses the service iptables save information
+# First Line config file, then the file without comments.
+#IPTABLES
+Section = IPTables
+        FileName=/etc/sysconfig/iptables
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+:RH-Firewall-1-INPUT - [0:0]
+-A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+-A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+COMMIT
+EndSection
+

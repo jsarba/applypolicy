@@ -1,0 +1,16 @@
+Section = SystemKernel
+        net.ipv4.ip_forward = 0
+        net.ipv4.icmp_echo_ignore_broadcasts = 1
+        net.ipv4.icmp_ignore_bogus_error_responses = 1
+		net.ipv4.conf.all.accept_redirects = 0
+		net.ipv4.conf.default.accept_redirects = 0
+        net.ipv4.tcp_syncookies = 1
+		net.ipv4.conf.all.accept_source_route = 0
+		net.ipv4.conf.default.accept_source_route = 0
+        net.ipv4.conf.all.log_martians = 1
+        net.ipv4.conf.default.log_martians = 1
+		dev.audit.max-messages = 1024
+        dev.audit.paranoia = 0
+        dev.audit.attach-all = 0
+        dev.audit.allow-suspend  = 1
+EndSection

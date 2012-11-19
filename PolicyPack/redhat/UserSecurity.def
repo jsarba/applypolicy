@@ -1,0 +1,13 @@
+Section = UserSecurity
+        tmout = 900
+		pwdwarntime = 7
+		minlen = 12
+		# Override old value
+        maxage = 45
+		#
+		histsize = 100
+        uidmin = 400
+        uidmax = 60000
+        gidmin = 400
+        gidmax = 60000
+EndSection

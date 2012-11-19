@@ -108,5 +108,34 @@ SystemKernel_dev_audit_allow_suspend_RH ()
  sysctl_handle dev.audit.allow-suspend "$1"
 }
 
+SystemKernel_net_ipv4_conf_all_accept_redirects_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle net.ipv4.conf.all.accept_redirects "$1"
+}
 
+SystemKernel_net_ipv4_conf_all_accept_source_route_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle net.ipv4.conf.all.accept_source_route "$1"
+}
 
+SystemKernel_net_ipv4_conf_default_accept_redirects_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle net.ipv4.conf.default.accept_redirects "$1"
+}
+
+SystemKernel_net_ipv4_conf_default_accept_source_route_RH ()
+{
+ if [ ${TESTFLAG} = 1 ]; then
+  return
+ fi
+ sysctl_handle net.ipv4.conf.default.accept_source_route "$1"
+}

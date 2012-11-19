@@ -1,0 +1,9 @@
+#New users config
+Section = NewUsers
+        Group = 100
+        Home = /home
+        Inactive = 20
+        Expire = 01/01/2003
+        Skel = /etc/skel
+        UMask = 027
+EndSection
