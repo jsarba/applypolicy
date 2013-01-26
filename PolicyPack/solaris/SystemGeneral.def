@@ -1,0 +1,20 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on Solaris
+#
+#
+#
+# Warning!: Case Sensitive
+# Remember to use "" in all text values
+#
+
+#
+# System Values
+#
+
+Section = SystemGeneral
+        LoginMessage = "Atención: Los equipos informáticos de la Organización solo deberán ser utilizados para fines autorizados"
+        MotdMessage = "Recuerde cerrar la sesión una vez finalizada sus actividades"
+	# If you want to overwrite the settings in the general def file SystemGeneral
+	UserTimeout = 1200
+EndSection

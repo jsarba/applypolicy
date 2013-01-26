@@ -18,7 +18,7 @@ SystemGeneral_LoginDelay_AIX()
   handle_login logindelay "${1}"
 }
 
-SystemGeneral_MOTD_AIX()
+SystemGeneral_MotdMessage_AIX()
 {
   if [ ${TESTFLAG} = 1 ] ; then
     return
@@ -64,6 +64,10 @@ SystemGeneral_LoginReenable_AIX()
 SystemGeneral_LoginTimes_AIX()
 {
 # I'm here!
+# logintimes = ALL|time[,time]
+# 	time is of the form [!][d[-d]]:start-end, where d is the
+# 	day number (Monday=1). start and end are four-digit
+# 	24-hour) times. An initial ! functions as a negator.
   if [ ${TESTFLAG} = 1 ] ; then
     return
   fi

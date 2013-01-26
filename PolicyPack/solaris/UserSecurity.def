@@ -1,0 +1,7 @@
+#This section configures the _default_ section of the etc/security/user file
+Section = UserSecurity
+        passreq = yes
+        console = /dev/console
+        syslog = yes
+		minlen = 12
+EndSection

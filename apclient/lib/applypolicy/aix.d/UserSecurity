@@ -81,7 +81,7 @@ UserSecurity_ttys_AIX()
 
 UserSecurity_auth1_AIX()
 {
-# I'm here!
+# DEPRECATED ?
   if [ ${TESTFLAG} = 1 ] ; then
     return
   fi
@@ -91,7 +91,7 @@ UserSecurity_auth1_AIX()
 
 UserSecurity_auth2_AIX()
 {
-# I'm here!
+# DEPRECATED ?
   if [ ${TESTFLAG} = 1 ] ; then
     return
   fi

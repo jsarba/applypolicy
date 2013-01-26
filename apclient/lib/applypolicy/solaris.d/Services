@@ -84,14 +84,6 @@ Services_systat_SOL ()
   handle_inetd "systat" "$1"
 }   
 
-Services_systat_SOL ()
-{
-  if [ ${TESTFLAG} = 1 ]; then
-    return
-  fi
-  handle_inetd "systat" "$1"
-}   
-
 Services_ftp_SOL ()
 { 
   if [ ${TESTFLAG} = 1 ]; then
@@ -130,14 +122,6 @@ Services_telnet_SOL ()
     return
   fi
   handle_inetd "telnet" "$1"
-}   
-
-Services_rexd_SOL ()
-{ 
-  if [ ${TESTFLAG} = 1 ]; then
-    return
-  fi
-  handle_inetd "rexd\/1" "$1"
 }   
 
 Services_perfmeter_SOL ()

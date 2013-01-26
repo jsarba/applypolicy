@@ -1,0 +1,35 @@
+#SSH server policy
+Section = SSHPolicy
+        LoginMessage="Atención: Los equipos informáticos de la Organización solo deberán ser utilizados para fines autorizados"
+        #This should be on the individual .def
+        #ListenAddress  host|IP
+        PermitRootLogin = no
+        PermitEmptyPasswords = no
+        AllowGroups = "sshusers users"
+        PasswordAuthentication = yes
+        Protocol = 2
+        Banner = "/etc/issue.net"
+        Subsystem = "sftp /usr/lib/sftp-server"
+        IgnoreRhosts = yes
+		PrintLastLog = yes
+		PrintMotd = yes
+        LogLevel = INFO
+        LoginGraceTime = 60
+        MaxStartups = 10
+        X11Forwarding = no
+        AllowTcpForwarding = no
+        GatewayPorts = no
+        Ciphers = 3des-cbc
+        SyslogFacility = AUTHPRIV
+        RSAAuthentication = no
+        PubkeyAuthentication = yes
+        RhostsRSAAuthentication = no
+        HostBasedAuthentication = no
+        ChallengeResponseAuthentication = no
+        KerberosAuthentication = no
+        PAMAuthenticationViaKbdInt = no
+        UsePrivilegeSeparation = yes
+EndSection
+
+
+

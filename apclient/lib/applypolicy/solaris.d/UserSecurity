@@ -111,7 +111,7 @@ UserSecurity_maxage_SOL()
   handle_defpasswdfile MAXWEEKS "$1"
 }
 
-UserSecurity_passlen_SOL()
+UserSecurity_minlen_SOL()
 {
  if [ ${TESTFLAG} = 1 ] ; then
     return

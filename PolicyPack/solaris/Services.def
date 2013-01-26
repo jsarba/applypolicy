@@ -1,0 +1,13 @@
+#System Services launched by inetd or inittab
+Section = Services
+        perfmeter = false
+        rup = false
+        systat = false
+	ssh = true
+	spray = false
+	rlogin = false
+	uucp = false
+	netstat = false
+	# Just for overwrite settings in the general def file.
+	ftp = true
+EndSection

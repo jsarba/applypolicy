@@ -1,0 +1,6 @@
+Section = CronAtPolicy
+        CronAllow = "root"
+        CronDeny = "ALL"
+        AtAllow = "root"
+        AtDeny = "daemon,bin,sys,adm,uuco,lpd,guest,nobody, smtp"
+EndSection

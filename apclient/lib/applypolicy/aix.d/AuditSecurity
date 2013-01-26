@@ -79,7 +79,7 @@ AuditPolicy_users_AIX()
  fi
 
  FOUND=0
- #Change ; to new lines para separar to separate in lines each group of
+ #Change ; to new lines to separate in lines each group of
  #groups and it's characeristic value (eigenvalue? :))
  ULIST=$(echo ${1} | ${SED} -e 's/ *//g' -e 's/;/ /g')
 

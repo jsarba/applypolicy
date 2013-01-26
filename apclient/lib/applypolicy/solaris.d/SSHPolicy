@@ -224,12 +224,12 @@ SSHPolicy_RhostsRSAAuthentication_SOL()
   handle_sshdoption RhostsRSAAuthentication "${1}"
 }
 
-SSHPolicy_RhostsRSAAuthentication_SOL()
+SSHPolicy_HostBasedAuthentication_SOL()
 {
   if [ ${TESTFLAG} = 1 ] ; then
     return
   fi
-  handle_sshdoption RhostsRSAAuthentication "${1}"
+  handle_sshdoption HostBasedAuthentication "${1}"
 }
 
 SSHPolicy_ChallengeResponseAuthentication_SOL()
