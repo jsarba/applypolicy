@@ -1,0 +1,23 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on AIX
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# System Values
+#
+
+Section = SystemGeneral
+        LoginMessage = "Este equipo informático solo debe ser utilizado para fines autorizados por la Compañía"
+        LoginDelay = 2
+        LoginDisable = 4
+        LoginReenable = 0
+        LoginTimes = ""
+        SAK = false
+        AllowedShells = "/usr/bin/ksh,/bin/ksh,/usr/bin/csh,/bin/csh,/bin/sh"
+        MaxLogins = 5
+EndSection

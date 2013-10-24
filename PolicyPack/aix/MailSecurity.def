@@ -1,0 +1,16 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on AIX
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# User Security
+#
+
+Section = MailSecurity
+        NoAliases = "decode,uudecode"
+EndSection

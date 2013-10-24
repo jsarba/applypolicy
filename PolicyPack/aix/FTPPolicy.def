@@ -1,0 +1,17 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on AIX
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# FTP Policy
+#
+
+#FTPServer Security
+Section = FTPPolicy
+        CommandLine = "-l daemon.info ftp.log -t 300 -u 027"
+EndSection

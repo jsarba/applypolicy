@@ -1,0 +1,25 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on AIX
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# Network File System policy
+#
+
+#NFS Server Security (/etc/rc.nfs)
+Section = NFSPolicy
+        automountd = false
+        biod = false
+        keyserv = false
+        nfsd = false
+        rpc_lockd = false
+        rpc_mountd = false
+        rpc_statd = false
+        rpc_yppasswdd = false
+        ypupdated  = false
+EndSection

@@ -1,0 +1,43 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on AIX
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# User Security
+#
+
+#This section configures the _default_ section of the etc/security/user file
+Section = UserSecurity
+        admin = false
+        login = true
+        su = false
+        daemon = true
+        rlogin = true
+        sugroups = security
+        admgroups = ""
+        ttys = ALL
+        auth1 = SYSTEM
+        auth2 = NONE
+        tpath = nosak
+        SYSTEM = "files"
+        account_locked = false
+        expires = 0
+        logintimes = ""
+        pwdwarntime = 7
+        histexpire = 26
+        histsize = 10
+        maxage = 12
+        maxexpired = -1
+        minalpha = 1
+        minother = 1
+        minlen = 6
+        mindiff = 4
+        maxrepeats = 3
+        dictionlist = ""
+        pwdchecks = ""
+EndSection

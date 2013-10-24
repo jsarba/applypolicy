@@ -1,0 +1,8 @@
+Section = GroupSecurity
+        admin = bin sys adm uucp mail security cron audit shutdown : true ; false
+        adms = bin sys adm uucp mail security cron audit shutdown : ; root
+#Check for repeated users on groups
+        check_dups = true
+#Check for groups assigned to roles. If true no group can belog to any role.
+        empty_roles = true
+EndSection

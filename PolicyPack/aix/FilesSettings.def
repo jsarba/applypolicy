@@ -1,0 +1,111 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on AIX
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# Files perms and modes
+#
+# Section format:
+#
+# FullPathToFile = owner:group:perms
+#
+# -note that perm is in octal format
+#
+Section = FilesSettings
+        /etc/security/login.cfg=root:admin:0600
+        /var/adm/cron/at.allow=root:root:600
+        /var/adm/cron/at.deny=root:root:600
+        /usr/bin/X11/xhost=root:system:750
+        /var/logs/historicos=root:audit:750
+        /dev=root:system:770
+        /etc=root:system:755
+        /usr=bin:bin:755
+        /var=bin:bin:755
+        /home=bin:bin:755
+        /sbin=bin:bin:755
+        /audit=root:audit:750
+        /etc/lpp=root:system:755
+        /etc/security=root:security:750
+        /etc/uucp=root:sys:755
+        /etc/rc.d=root:system:755
+        /etc/inetd.conf=root:system:664
+        /usr/bin=bin:bin:755
+        /usr/lbin=bin:bin:755
+        /usr/lib=bin:bin:755
+        /usr/lib/security=bin:bin:755
+        /usr/bin/X11/bin=bin:bin:755
+        /usr/bin/X11/lbin=bin:bin:755
+        /usr/bin/X11/lib=bin:bin:755
+        /usr/bin/X11/lib/security=bin:bin:755
+        /etc/passwd=root:security:644
+        /etc/group=root:security:644
+        /etc/rc*=bin:bin:554
+        /etc/services=root:system:644
+        /etc/syslog.conf=root:system:644
+        /etc/hosts=root:system:664
+        /etc/inetd.conf=root:system:644
+        /etc/hosts.equiv=root:system:644
+        /.profile=root:system:664
+        /etc/profile=root:system:664
+        /usr/share/dict/words=root:system:640
+        /usr/bin/acledit=bin:bin:550
+        /usr/bin/aclget=bin:bin:550
+        /usr/bin/at=root:cron:555
+        /usr/bin/atq=bin:cron:555
+        /usr/sbin/audit=root:audit:4550
+        /usr/sbin/auditbin=root:audit:4550
+        /usr/sbin/auditcat=root:audit:4550
+        /usr/sbin/auditconv=root:audit:4550
+        /usr/sbin/auditpr=root:audit:4550
+        /usr/sbin/auditselect=root:audit:4550
+        /usr/sbin/auditstream=root:audit:4550
+        /usr/bin/cronadm=root:cron:2710
+        /usr/bin/crontab=root:cron:555
+        /usr/bin/chfn=root:security:2750
+        /usr/bin/chgroup=root:security:4550
+        /usr/bin/chgrp=bin:bin:550
+        /usr/bin/chgrpmem=root:security:2550
+        /usr/bin/chmod=bin:bin:550
+        /usr/bin/chown=root:bin:550
+        /usr/bin/chque=root:printq:6550
+        /usr/bin/chquedev=root:printq:6550
+        /usr/bin/chrole=root:security:2550
+        /usr/bin/chsec=root:security:4550
+        /usr/bin/chsh=root:security:2550
+        /usr/bin/chuser=root:security:4550
+        /usr/bin/finger=root:system:750
+        /usr/bin/ftp=root:system:4555
+        /usr/bin/groups=bin:bin:550
+        /usr/bin/last=bin:bin:550
+        /usr/bin/logger=bin:bin:550
+        /usr/sbin/lsgroup=root:security:550
+        /usr/sbin/lsrole=root:security:550
+        /usr/sbin/lsuser=root:security:4550
+        /usr/bin/mkrole=root:security:4550
+        /usr/bin/mkuser=root:security:4550
+        /usr/bin/passwd=root:security:4555
+        /usr/bin/pwdadm=root:security:4550
+        /usr/bin/pwdck=root:security:4550
+        /usr/bin/rcp=root:system:4550
+        /usr/bin/rdist=root:bin:4550
+        /usr/bin/remsh=root:system:4550
+        /usr/bin/rexec=root:bin:4550
+        /usr/bin/rlogin=root:bin:4550
+        /usr/sbin/rmgroup=root:security:4550
+        /usr/sbin/rmrole=root:security:4550
+        /usr/bin/ruptime=root:system:4550
+        /usr/bin/rusers=root:system:550
+        /usr/bin/rwho=root:system:4550
+        /usr/sbin/sendmail=root:system:6555
+        /usr/bin/setgroups=root:security:4550
+        /usr/sbin/spray=root:system:550
+        /usr/bin/telnet=root:system:4550
+        /usr/bin/tftp=root:system:4550
+        /usr/lpp/X11/bin/startx=root:system:550
+        /usr/lpp/X11/bin/X=root:system:550
+EndSection

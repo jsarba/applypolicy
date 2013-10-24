@@ -1,0 +1,4 @@
+Section = AuditPolicy
+        classes = auditoria:PORT_Locked,PORT_Change,CRON_JobAdd,CRON_JobRemove;auditgral:USER_SU,PASSWORD_Change,GROUP_Create,GROUP_Remove,USER_Create,USER_Change,USER_Remove
+        users = root:auditgral,auditoria;auditgral
+EndSection

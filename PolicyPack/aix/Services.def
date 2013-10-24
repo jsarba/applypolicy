@@ -1,0 +1,76 @@
+# Apply Policy Copyright (C) 2006 SHELLCODE SRL
+# Date: July 2006
+# Description: Security Policy for ApplyPolicy on AIX
+#
+#
+#
+# Warning!: Case Sensitive
+#
+
+#
+# System Services
+#
+
+
+#System Services launched by inetd or inittab
+Section = Services
+        bootps = false
+        chargen = false
+        cmsd = false
+        comsat = false
+        daytime = false
+        discard = false
+        dtspc = false
+        echo = false
+        exec = false
+        imap2 = false
+        klogin = false
+        kshell = false
+        login = false
+        ntalk = false
+        pcnfsd = false
+        pop3 = false
+        quotad = false
+        rstatd = false
+        rusersd = false
+        rwalld = false
+        shell = false
+        sprayd = false
+        talk = false
+        time = false
+        ttdbserver = false
+        uucp = false
+        dt = false
+        dt_nogb = false
+        httpdlite = false
+        i4ls = false
+        imnss = false
+        imqss = false
+        lpd = false
+        nfs = false
+        piobe = false
+        qdaemon = false
+        uprintfd = false
+        writesv = false
+        xdm = false
+        autoconf6 = false
+        dhcpcd = false
+        dhcprd = false
+        dhcpsd = false
+        dpid2 = false
+        gated = false
+        inetd = false
+        mrouted = false
+        names = false
+        ndp-host = false
+        ndp-router = false
+        portmap = true
+        routed = false
+        rwhod = false
+        sendmail = false
+        snmpd = false
+        syslogd = true
+        timed = false
+        xntpd = false
+        dtlogin = false
+EndSection
